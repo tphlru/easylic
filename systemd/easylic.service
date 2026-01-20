@@ -1,0 +1,31 @@
+[Unit]
+Description=EasyLic License Server
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+User=easylic
+Group=easylic
+WorkingDirectory=/opt/easylic
+Environment=PATH=/opt/easylic/venv/bin
+Environment=SERVER_HOST=127.0.0.1
+Environment=SERVER_PORT=8000
+Environment=ADMIN_PASSWORD_FILE=/etc/easylic/admin_password
+ExecStart=/opt/easylic/venv/bin/uvicorn easylic.server.core:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=easylic
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/easylic /var/log/easylic
+ProtectHome=yes
+PrivateDevices=yes
+
+[Install]
+WantedBy=multi-user.target

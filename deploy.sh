@@ -1,9 +1,16 @@
 #!/bin/bash
-# Production deployment script
+# EasyLic Production Deployment Script
 
 set -e
 
-echo "🚀 Starting EasyLic production deployment..."
+echo "=== EasyLic Production Deployment ==="
+
+# Configuration
+APP_NAME="easylic"
+APP_DIR="/opt/$APP_NAME"
+VENV_DIR="$APP_DIR/venv"
+USER_NAME="$APP_NAME"
+SERVICE_FILE="/etc/systemd/system/$APP_NAME.service"
 
 # Colors for output
 RED='\033[0;31m'
@@ -11,63 +18,87 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Configuration
-DOCKER_IMAGE="${DOCKER_IMAGE:-easylic:latest}"
-CONTAINER_NAME="${CONTAINER_NAME:-easylic-server}"
-HOST_PORT="${HOST_PORT:-8000}"
-CONTAINER_PORT="${CONTAINER_PORT:-8000}"
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
 
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}❌ Docker is not running. Please start Docker first.${NC}"
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if running as root
+if [[ $EUID -ne 0 ]]; then
+   log_error "This script must be run as root"
+   exit 1
+fi
+
+# Create application user
+if ! id "$USER_NAME" &>/dev/null; then
+    log_info "Creating user $USER_NAME"
+    useradd --system --shell /bin/bash --home-dir "$APP_DIR" --create-home "$USER_NAME"
+else
+    log_info "User $USER_NAME already exists"
+fi
+
+# Create application directory
+log_info "Creating application directory $APP_DIR"
+mkdir -p "$APP_DIR"
+chown "$USER_NAME:$USER_NAME" "$APP_DIR"
+
+# Install Python dependencies
+log_info "Setting up Python virtual environment"
+su - "$USER_NAME" -c "python3 -m venv $VENV_DIR"
+su - "$USER_NAME" -c "$VENV_DIR/bin/pip install --upgrade pip"
+
+# Copy application files
+log_info "Copying application files"
+cp -r . "$APP_DIR/"
+chown -R "$USER_NAME:$USER_NAME" "$APP_DIR"
+
+# Install Python package
+log_info "Installing Python package"
+su - "$USER_NAME" -c "cd $APP_DIR && $VENV_DIR/bin/pip install -e ."
+
+# Generate server keys
+log_info "Generating server keys"
+su - "$USER_NAME" -c "cd $APP_DIR && $VENV_DIR/bin/easylic keygen"
+
+# Create admin password file
+if [[ ! -f /etc/easylic/admin_password ]]; then
+    log_info "Creating admin password file"
+    mkdir -p /etc/easylic
+    echo "admin123" > /etc/easylic/admin_password
+    chmod 600 /etc/easylic/admin_password
+    log_warn "Default admin password set. Change it in /etc/easylic/admin_password"
+fi
+
+# Install systemd service
+log_info "Installing systemd service"
+cp "systemd/$APP_NAME.service" "$SERVICE_FILE"
+systemctl daemon-reload
+systemctl enable "$APP_NAME"
+
+# Start service
+log_info "Starting $APP_NAME service"
+systemctl start "$APP_NAME"
+
+# Check service status
+sleep 5
+if systemctl is-active --quiet "$APP_NAME"; then
+    log_info "Service started successfully"
+    systemctl status "$APP_NAME" --no-pager -l
+else
+    log_error "Service failed to start"
+    systemctl status "$APP_NAME" --no-pager -l
     exit 1
 fi
 
-# Build the image if it doesn't exist
-if ! docker image inspect "$DOCKER_IMAGE" > /dev/null 2>&1; then
-    echo -e "${YELLOW}🔨 Building Docker image...${NC}"
-    docker build -t "$DOCKER_IMAGE" .
-fi
-
-# Stop and remove existing container
-if docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
-    echo -e "${YELLOW}🛑 Stopping existing container...${NC}"
-    docker stop "$CONTAINER_NAME"
-fi
-
-if docker ps -a -q -f name="$CONTAINER_NAME" | grep -q .; then
-    echo -e "${YELLOW}🗑️  Removing existing container...${NC}"
-    docker rm "$CONTAINER_NAME"
-fi
-
-# Run the new container
-echo -e "${GREEN}🚀 Starting new container...${NC}"
-docker run -d \
-    --name "$CONTAINER_NAME" \
-    --restart unless-stopped \
-    -p "$HOST_PORT:$CONTAINER_PORT" \
-    -v "$(pwd)/logs:/home/app/logs" \
-    -v "$(pwd)/keys:/home/app/easylic/server" \
-    --env-file .env \
-    "$DOCKER_IMAGE"
-
-# Wait for health check
-echo -e "${YELLOW}⏳ Waiting for service to be healthy...${NC}"
-for i in {1..30}; do
-    if curl -f http://localhost:"$HOST_PORT"/health > /dev/null 2>&1; then
-        echo -e "${GREEN}✅ Service is healthy!${NC}"
-        break
-    fi
-    echo -n "."
-    sleep 2
-done
-
-if [ $i -eq 30 ]; then
-    echo -e "${RED}❌ Service failed to start properly${NC}"
-    docker logs "$CONTAINER_NAME"
-    exit 1
-fi
-
-echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
-echo -e "${GREEN}🌐 Service available at: http://localhost:$HOST_PORT${NC}"
-echo -e "${GREEN}📊 Health check: http://localhost:$HOST_PORT/health${NC}"
+log_info "=== Deployment completed successfully ==="
+log_info "Service: $APP_NAME"
+log_info "Status: systemctl status $APP_NAME"
+log_info "Logs: journalctl -u $APP_NAME -f"
+log_info "Web interface: http://localhost:8000"
