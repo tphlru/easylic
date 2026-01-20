@@ -29,13 +29,7 @@ from ..common.models import (
     LicenseData, LicensePayload, Policy, SessionData
 )
 
-# Global app instance for routes
-app = FastAPI()
 
-@app.get("/health")
-def health_check():
-    """Health check endpoint."""
-    return {"status": "ok", "timestamp": int(time.time())}
 
 
 class LicenseServer:
@@ -112,8 +106,11 @@ class LicenseServer:
 
     def _setup_routes(self):
         """Setup API routes."""
-        # Routes are defined at module level with decorators
-        pass
+        @self.app.get("/health")
+        def health_check():
+            return {"status": "ok", "timestamp": int(time.time())}
+
+        # Add other routes as needed
 
     def _load_revoked_licenses(self) -> Dict[str, int]:
         """Load revoked licenses from file."""
