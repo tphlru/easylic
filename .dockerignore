@@ -49,6 +49,7 @@ logs/
 # Docker
 Dockerfile
 .dockerignore
+docker-entrypoint.sh
 
 # Documentation
 *.md

@@ -24,8 +24,7 @@ COPY README.md .
 # Install Python dependencies
 RUN pip install --no-cache-dir -e .
 
-# Generate server keys (will be done at runtime if not present)
-RUN easylic keygen
+# Generate server keys at runtime if not present
 
 # Change ownership to app user
 RUN chown -R app:app /home/app
@@ -40,5 +39,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Default command to run the server
-CMD ["uvicorn", "easylic.server.core:app", "--host", "0.0.0.0", "--port", "8000"]
+# Entrypoint script to generate keys if needed and start server
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
