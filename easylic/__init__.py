@@ -1,0 +1,1 @@
+# THPL Easy Licensing

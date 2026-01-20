@@ -1,0 +1,2 @@
+[console_scripts]
+easylic = easylic.cli:cli
