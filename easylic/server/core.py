@@ -48,82 +48,6 @@ class LicenseServer:
         base_dir: Optional[Path] = None,
         server_keys_dir: Optional[Path] = None,
         license_file_path: Optional[Path] = None,
-    ):
-        # Setup logging
-        logging.basicConfig(level=log_level)
-        self.logger = logging.getLogger(__name__)
-
-        # Initialize FastAPI app
-        self.app = FastAPI(title="THPL Easy Licensing Server", version="1.0.0")
-
-        # Setup routes
-        self._setup_routes()
-
-        # Initialize other components
-        self.sessions: Dict[str, SessionData] = {}
-        self.revoked_licenses: Set[str] = set()
-        self.start_attempts: Dict[str, List[float]] = {}
-        self.server_private_key = None
-        self.server_public_key = None
-
-        # Load server keys
-        self._load_server_keys()
-
-        # Load existing data if available
-        self._load_persistent_data()
-
-    def _setup_routes(self):
-        """Setup FastAPI routes."""
-        @self.app.get("/health")
-        async def health_check():
-            """Health check endpoint."""
-            return {"status": "ok", "timestamp": int(time.time())}
-
-        @self.app.post("/start")
-        async def start_session(request: StartRequest):
-            # Existing start logic...
-            return await self._handle_start(request)
-
-        @self.app.post("/renew")
-        async def renew_session(request: RenewRequest):
-            # Existing renew logic...
-            return await self._handle_renew(request)
-
-        @self.app.post("/revoke")
-        async def revoke_license(request: RevokeRequest):
-            # Existing revoke logic...
-            return await self._handle_revoke(request)
-
-    async def _handle_start(self, request: StartRequest):
-        """Handle start session request."""
-        # Placeholder - implement actual logic
-        return {"session_id": "placeholder", "expires_at": int(time.time()) + 3600}
-
-    async def _handle_renew(self, request: RenewRequest):
-        """Handle renew session request."""
-        # Placeholder - implement actual logic
-        return {"ciphertext": "placeholder", "counter": 1}
-
-    async def _handle_revoke(self, request: RevokeRequest):
-        """Handle revoke license request."""
-        # Placeholder - implement actual logic
-        return {"revoked_at": int(time.time())}
-
-    def _load_server_keys(self):
-        """Load server keys."""
-        try:
-            from cryptography.hazmat.primitives import serialization
-            with open(self.server_keys_dir / "server_private.key", "rb") as f:
-                self.server_private_key = serialization.load_pem_private_key(f.read(), password=None)
-            with open(self.server_keys_dir / "server_public.key", "rb") as f:
-                self.server_public_key = serialization.load_pem_public_key(f.read())
-        except FileNotFoundError:
-            self.logger.warning("Server keys not found. Generate them with 'easylic keygen'")
-
-    def _load_persistent_data(self):
-        """Load persistent session and revocation data."""
-        # Placeholder for loading sessions and revoked licenses from disk
-        pass
         revoked_licenses_file_path: Optional[Path] = None,
     ):
         self.logger = logging.getLogger(__name__)
@@ -180,6 +104,7 @@ class LicenseServer:
 
     def _setup_routes(self):
         """Setup FastAPI routes."""
+        self.app.add_api_route("/health", self.health, methods=["GET"])
         self.app.add_api_route("/start", self.start, methods=["POST"])
         self.app.add_api_route("/renew", self.renew, methods=["POST"])
         self.app.add_api_route("/revoke", self.revoke, methods=["POST"])
