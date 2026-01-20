@@ -9,6 +9,7 @@ def cli():
     """THPL Easy Licensing CLI"""
     pass
 
+
 @cli.command()
 @click.option('--keys-dir', default=None, help='Directory to save keys (default: ./easylic/server)')
 def keygen(keys_dir):
@@ -25,6 +26,7 @@ def keygen(keys_dir):
 @click.option('--port', default=None, type=int, help='Port to bind server to (default: from SERVER_PORT env or 8000)')
 def serve(keys_dir, host, port):
     """Start the license server"""
+    # Set environment variables before importing server
     if keys_dir:
         import os
         os.environ['EASYLIC_KEYS_DIR'] = keys_dir
@@ -34,11 +36,13 @@ def serve(keys_dir, host, port):
     if port:
         import os
         os.environ['SERVER_PORT'] = str(port)
+
     # Warn about default admin password
     import os
     admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
     if admin_password == "admin123":
         click.echo("WARNING: Using default admin password 'admin123'. Set ADMIN_PASSWORD environment variable to a secure password.", err=True)
+
     from .server import main
     main()
 
