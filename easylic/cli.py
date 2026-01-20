@@ -43,6 +43,11 @@ def serve(keys_dir, host, port):
     if admin_password == "admin123":
         click.echo("WARNING: Using default admin password 'admin123'. Set ADMIN_PASSWORD environment variable to a secure password.", err=True)
 
+    # Force reload of config after env vars are set
+    import importlib
+    import easylic.common.config
+    importlib.reload(easylic.common.config)
+
     from .server import main
     main()
 
