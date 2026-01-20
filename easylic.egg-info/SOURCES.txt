@@ -7,6 +7,7 @@ easylic/cli.py
 easylic.egg-info/PKG-INFO
 easylic.egg-info/SOURCES.txt
 easylic.egg-info/dependency_links.txt
+easylic.egg-info/entry_points.txt
 easylic.egg-info/requires.txt
 easylic.egg-info/top_level.txt
 easylic/client/__init__.py
