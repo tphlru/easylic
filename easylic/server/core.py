@@ -148,7 +148,6 @@ class LicenseServer:
         self.license_file_path = license_file_path or Config.LICENSE_FILE_PATH
         self.revoked_licenses_file_path = revoked_licenses_file_path or Config.REVOKED_LICENSES_FILE_PATH
         self.app = FastAPI()
-        self.app.add_api_route("/health", self._health_check, methods=["GET"])
         self.server_pub, self.server_priv = self._get_server_keys()
 
         # State management
@@ -160,10 +159,6 @@ class LicenseServer:
         # Log required client configuration
         self.logger.info(f"Server started on http://{self.server_host}:{self.server_port}")
         self.logger.info(f"Client must set server_url='http://{self.server_host}:{self.server_port}' to connect")
-
-    def _health_check(self):
-        """Health check endpoint."""
-        return {"status": "ok", "timestamp": int(time.time())}
 
     def _get_server_keys(self):
         """Load server keys from files using configured paths."""
