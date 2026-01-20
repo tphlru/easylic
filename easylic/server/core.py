@@ -11,7 +11,7 @@ import hmac
 import logging
 from typing import Dict, List, Optional, cast
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.responses import HTMLResponse, Response
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PublicKey, Ed25519PrivateKey
