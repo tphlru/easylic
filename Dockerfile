@@ -25,7 +25,7 @@ COPY README.md .
 RUN pip install --no-cache-dir -e .
 
 # Generate server keys (will be done at runtime if not present)
-# RUN easylic keygen
+RUN easylic keygen
 
 # Change ownership to app user
 RUN chown -R app:app /home/app

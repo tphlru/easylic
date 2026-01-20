@@ -41,6 +41,9 @@ easylic/server/server_private.key
 easylic/server/server_public.key
 easylic/client/keys/
 license.json
+
+# Generated keys (but they might still be in layers)
+# Use multi-stage build if needed for security
 logs/
 
 # Docker
