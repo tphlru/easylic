@@ -53,24 +53,38 @@ class LicenseServer:
         logging.basicConfig(level=log_level)
         self.logger = logging.getLogger(__name__)
 
+        # Store configuration
+        self.log_level = log_level
+        self.rekey_after_renews = rekey_after_renews
+        self.session_ttl = session_ttl
+        self.max_counter = max_counter
+        self.max_start_attempts_per_minute = max_start_attempts_per_minute
+        self.max_ciphertext_len = max_ciphertext_len
+        self.max_used_eph_pubs_per_license = max_used_eph_pubs_per_license
+        self.admin_password = admin_password
+        self.server_host = server_host
+        self.server_port = server_port
+        self.base_dir = base_dir or Config.BASE_DIR
+        self.server_keys_dir = server_keys_dir or Config.SERVER_KEYS_DIR
+        self.license_file_path = license_file_path or Config.LICENSE_FILE_PATH
+        self.revoked_licenses_file_path = Config.REVOKED_LICENSES_FILE_PATH
+
         # Initialize FastAPI app
         self.app = FastAPI(title="THPL Easy Licensing Server", version="1.0.0")
 
         # Setup routes
         self._setup_routes()
 
-        # Initialize other components
+        # Initialize state
+        self.server_pub, self.server_priv = self._get_server_keys()
         self.sessions: Dict[str, SessionData] = {}
-        self.revoked_licenses: Set[str] = set()
-        self.start_attempts: Dict[str, List[float]] = {}
-        self.server_private_key = None
-        self.server_public_key = None
+        self.revoked_licenses: Dict[str, int] = self._load_revoked_licenses()
+        self.start_attempts: Dict[str, List[int]] = {}
+        self.used_client_eph_pubs: Dict[str, Dict[bytes, int]] = {}
 
-        # Load server keys
-        self._load_server_keys()
-
-        # Load existing data if available
-        self._load_persistent_data()
+        # Log startup
+        self.logger.info(f"Server started on http://{self.server_host}:{self.server_port}")
+        self.logger.info(f"Client must set server_url='http://{self.server_host}:{self.server_port}' to connect")
 
     def _setup_routes(self):
         """Setup FastAPI routes."""
@@ -79,51 +93,7 @@ class LicenseServer:
             """Health check endpoint."""
             return {"status": "ok", "timestamp": int(time.time())}
 
-        @self.app.post("/start")
-        async def start_session(request: StartRequest):
-            # Existing start logic...
-            return await self._handle_start(request)
-
-        @self.app.post("/renew")
-        async def renew_session(request: RenewRequest):
-            # Existing renew logic...
-            return await self._handle_renew(request)
-
-        @self.app.post("/revoke")
-        async def revoke_license(request: RevokeRequest):
-            # Existing revoke logic...
-            return await self._handle_revoke(request)
-
-    async def _handle_start(self, request: StartRequest):
-        """Handle start session request."""
-        # Placeholder - implement actual logic
-        return {"session_id": "placeholder", "expires_at": int(time.time()) + 3600}
-
-    async def _handle_renew(self, request: RenewRequest):
-        """Handle renew session request."""
-        # Placeholder - implement actual logic
-        return {"ciphertext": "placeholder", "counter": 1}
-
-    async def _handle_revoke(self, request: RevokeRequest):
-        """Handle revoke license request."""
-        # Placeholder - implement actual logic
-        return {"revoked_at": int(time.time())}
-
-    def _load_server_keys(self):
-        """Load server keys."""
-        try:
-            from cryptography.hazmat.primitives import serialization
-            with open(self.server_keys_dir / "server_private.key", "rb") as f:
-                self.server_private_key = serialization.load_pem_private_key(f.read(), password=None)
-            with open(self.server_keys_dir / "server_public.key", "rb") as f:
-                self.server_public_key = serialization.load_pem_public_key(f.read())
-        except FileNotFoundError:
-            self.logger.warning("Server keys not found. Generate them with 'easylic keygen'")
-
-    def _load_persistent_data(self):
-        """Load persistent session and revocation data."""
-        # Placeholder for loading sessions and revoked licenses from disk
-        pass
+        # Other routes would be added here...
         revoked_licenses_file_path: Optional[Path] = None,
     ):
         self.logger = logging.getLogger(__name__)
