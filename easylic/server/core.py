@@ -106,7 +106,9 @@ class LicenseServer:
 
     def _setup_routes(self):
         """Setup API routes."""
-        self.app.router.add_get("/health", self._health_endpoint)
+        @self.app.get("/health")
+        def health():
+            return {"status": "ok", "timestamp": int(time.time())}
 
     def _health_endpoint(self):
         """Health check endpoint."""
