@@ -104,12 +104,30 @@ class LicenseServer:
 
     def _setup_routes(self):
         """Setup API routes."""
-        self.app.add_api_route("/health", self.health, methods=["GET"])
-        self.app.add_api_route("/start", self.start, methods=["POST"])
-        self.app.add_api_route("/renew", self.renew, methods=["POST"])
-        self.app.add_api_route("/revoke", self.revoke, methods=["POST"])
-        self.app.add_api_route("/generate_license", self.generate_license_endpoint, methods=["POST"])
-        self.app.add_api_route("/admin", self.admin_page, methods=["GET"])
+
+        @self.app.get("/health")
+        def health_check():
+            return {"status": "ok", "timestamp": int(time.time())}
+
+        @self.app.post("/start")
+        async def start_endpoint(request: StartRequest):
+            return await self.start(request)
+
+        @self.app.post("/renew")
+        async def renew_endpoint(request: RenewRequest):
+            return await self.renew(request)
+
+        @self.app.post("/revoke")
+        async def revoke_endpoint(request: RevokeRequest):
+            return await self.revoke(request)
+
+        @self.app.post("/generate_license")
+        async def generate_license_endpoint(request: GenerateLicenseRequest):
+            return await self.generate_license_endpoint(request)
+
+        @self.app.get("/admin")
+        async def admin_page():
+            return await self.admin_page()
 
     def _load_revoked_licenses(self) -> Dict[str, int]:
         """Load revoked licenses from file."""
