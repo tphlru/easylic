@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+
+</head>
+<body>
+    <h1>License Admin Panel</h1>
+
+    <h2>Revoke License</h2>
+    <form id="revokeForm">
+        <label for="revokeLicenseId">License ID:</label>
+        <input type="text" id="revokeLicenseId" required><br>
+        <label for="adminPassword">Admin Password:</label>
+        <input type="password" id="adminPassword" required>
+        <button type="submit">Revoke</button>
+    </form>
+
+    <h2>Generate License</h2>
+    <form id="generateForm">
+        <label for="genLicenseId">License ID:</label>
+        <input type="text" id="genLicenseId" required><br>
+        <label for="product">Product:</label>
+        <input type="text" id="product" required><br>
+        <label for="validFrom">Valid From (timestamp):</label>
+        <input type="number" id="validFrom" required><br>
+        <label for="validUntil">Valid Until (timestamp):</label>
+        <input type="number" id="validUntil" required><br>
+        <label for="maxSessions">Max Sessions:</label>
+        <input type="number" id="maxSessions" required><br>
+        <label for="adminPassword">Admin Password:</label>
+        <input type="password" id="adminPassword" required><br>
+        <button type="submit">Generate</button>
+    </form>
+
+     <div id="result" style="display:none;">
+         <h3>License Generated</h3>
+         <textarea id="licenseText" rows="20" cols="80" readonly></textarea><br>
+         <button id="copyBtn">Copy to Clipboard</button>
+         <button id="downloadBtn">Download License</button>
+     </div>
+
+    <script>
+
+
+        document.getElementById('revokeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const licenseId = document.getElementById('revokeLicenseId').value;
+            const password = document.getElementById('adminPassword').value;
+            const payload = { license_id: licenseId, password: password };
+            const response = await fetch('/revoke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payload })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert('License revoked successfully');
+            } else {
+                alert('Error: ' + result.detail);
+            }
+        });
+
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const licenseId = document.getElementById('genLicenseId').value;
+            const product = document.getElementById('product').value;
+            const validFrom = parseInt(document.getElementById('validFrom').value);
+            const validUntil = parseInt(document.getElementById('validUntil').value);
+            const maxSessions = parseInt(document.getElementById('maxSessions').value);
+            const password = document.getElementById('adminPassword').value;
+            const payload = {
+                license_id: licenseId,
+                product: product,
+                valid_from: validFrom,
+                valid_until: validUntil,
+                policy: { max_sessions: maxSessions, version: "1.0" },
+                password: password
+            };
+            const response = await fetch('/generate_license', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payload })
+            });
+            if (response.ok) {
+                const blob = await response.blob();
+                const text = await blob.text();
+                const result = JSON.parse(text);
+                document.getElementById('licenseText').value = JSON.stringify(result, null, 2);
+                document.getElementById('result').style.display = 'block';
+                
+                // Trigger download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `license_${licenseId}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                const error = await response.json();
+                alert('Error: ' + error.detail);
+            }
+            document.getElementById('copyBtn').onclick = () => {
+                const textArea = document.getElementById('licenseText');
+                textArea.select();
+                textArea.setSelectionRange(0, 99999); // For mobile devices
+                alert('License text selected! Press Ctrl+C (Cmd+C on Mac) to copy.');
+            };
+            document.getElementById('downloadBtn').onclick = () => {
+                const blob = new Blob([document.getElementById('licenseText').value], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `license_${licenseId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+        });
+    </script>
+</body>
+</html>
