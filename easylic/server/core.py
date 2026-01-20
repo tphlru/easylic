@@ -106,11 +106,11 @@ class LicenseServer:
 
     def _setup_routes(self):
         """Setup API routes."""
-        @self.app.get("/health")
-        def health_check():
-            return {"status": "ok", "timestamp": int(time.time())}
+        self.app.add_api_route("/health", self._health_endpoint, methods=["GET"])
 
-        # Add other routes as needed
+    def _health_endpoint(self):
+        """Health check endpoint."""
+        return {"status": "ok", "timestamp": int(time.time())}
 
     def _load_revoked_licenses(self) -> Dict[str, int]:
         """Load revoked licenses from file."""
