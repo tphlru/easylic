@@ -103,7 +103,7 @@ class LicenseServer:
         self._setup_routes()
 
     def _setup_routes(self):
-        """Setup FastAPI routes."""
+        """Setup API routes."""
         self.app.add_api_route("/health", self.health, methods=["GET"])
         self.app.add_api_route("/start", self.start, methods=["POST"])
         self.app.add_api_route("/renew", self.renew, methods=["POST"])
@@ -504,6 +504,10 @@ class LicenseServer:
             return policy.get("version") == Config.POLICY_VERSION
         except Exception:
             return False
+
+    def health(self):
+        """Health check endpoint."""
+        return {"status": "ok", "timestamp": int(time.time())}
 
     async def admin_page(self):
         """Handle /admin endpoint."""
