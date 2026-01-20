@@ -2,16 +2,7 @@ Metadata-Version: 2.4
 Name: easylic
 Version: 1.0.0
 Summary: THPL Easy Licensing - Secure license management system
-Author-email: Your Name <your.email@example.com>
-Classifier: Development Status :: 3 - Alpha
-Classifier: Intended Audience :: Developers
-Classifier: License :: OSI Approved :: MIT License
-Classifier: Operating System :: OS Independent
-Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.8
-Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
-Classifier: Programming Language :: Python :: 3.11
+Author-email: Timur Tunkin <t.tunkin@yandex.ru>
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE_STATE_MACHINE.md
@@ -20,6 +11,11 @@ Requires-Dist: uvicorn
 Requires-Dist: pydantic
 Requires-Dist: cryptography
 Requires-Dist: requests
+Requires-Dist: click
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-asyncio; extra == "dev"
+Requires-Dist: pytest-mock; extra == "dev"
 Dynamic: license-file
 
 # THPL Easy Licensing Documentation
