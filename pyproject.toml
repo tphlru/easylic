@@ -1,34 +1,12 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "easylic"
-version = "1.0.0"
-description = "THPL Easy Licensing - Secure license management system"
-authors = [
-    {name = "Your Name", email = "your.email@example.com"},
+# Test configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
 ]
-readme = "README.md"
-requires-python = ">=3.8"
-dependencies = [
-    "fastapi",
-    "uvicorn",
-    "pydantic",
-    "cryptography",
-    "requests",
-]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-]
-
-[project.scripts]
-easylic = "easylic.cli:cli"
