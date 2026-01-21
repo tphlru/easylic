@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from easylic.common.config import Config
 
 
@@ -13,9 +14,9 @@ def test_config_class_attributes():
 
 def test_config_server_settings():
     # Test default values
-    assert Config.ADMIN_PASSWORD == os.getenv("ADMIN_PASSWORD", "admin123")
-    assert Config.SERVER_HOST == os.getenv("SERVER_HOST", "127.0.0.1")
-    assert Config.SERVER_PORT == int(os.getenv("SERVER_PORT", "8000"))
+    assert os.getenv("ADMIN_PASSWORD", "admin123") == Config.ADMIN_PASSWORD
+    assert os.getenv("SERVER_HOST", "127.0.0.1") == Config.SERVER_HOST
+    assert int(os.getenv("SERVER_PORT", "8000")) == Config.SERVER_PORT
 
 
 def test_config_paths(monkeypatch):
@@ -28,13 +29,14 @@ def test_config_paths(monkeypatch):
 
     # Import Config after env cleanup to get fresh values
     from importlib import reload
+
     import easylic.common.config
     reload(easylic.common.config)
     from easylic.common.config import Config
 
     base_dir = Path(__file__).parent.parent / "easylic"
     expected_keys_dir = base_dir / "server"
-    assert Config.SERVER_KEYS_DIR == expected_keys_dir
+    assert expected_keys_dir == Config.SERVER_KEYS_DIR
     assert Config.SERVER_PUBLIC_KEY_PATH == Config.SERVER_KEYS_DIR / "server_public.key"
     assert Config.SERVER_PRIVATE_KEY_PATH == Config.SERVER_KEYS_DIR / "server_private.key"
 

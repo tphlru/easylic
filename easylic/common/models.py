@@ -2,8 +2,11 @@
 Pydantic models for request/response validation.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 from pydantic import BaseModel, Field
-from typing import Dict, Any, List, Optional
 
 
 class LicensePayload(BaseModel):
@@ -11,7 +14,7 @@ class LicensePayload(BaseModel):
     product: str
     valid_from: int
     valid_until: int
-    policy: Dict[str, Any]
+    policy: dict[str, Any]
 
 
 class LicenseData(BaseModel):
@@ -24,7 +27,7 @@ class StartRequest(BaseModel):
     license: LicenseData
     client_pubkey: str
     client_eph_pub: str
-    supported_features: Dict[str, bool]
+    supported_features: dict[str, bool]
 
 
 class StartResponse(BaseModel):
@@ -32,7 +35,7 @@ class StartResponse(BaseModel):
     expires_at: int
     protocol_version: int
     cipher_suite: str
-    required_features: Dict[str, bool]
+    required_features: dict[str, bool]
     server_eph_pub: str
     nonce_prefix: str
     signature: str
@@ -56,7 +59,7 @@ class RenewData(BaseModel):
     client_sig: str
     version: int
     cipher_suite: str
-    client_proof: Optional[str] = None
+    client_proof: str | None = None
 
 
 class RenewResponseData(BaseModel):
@@ -65,22 +68,22 @@ class RenewResponseData(BaseModel):
     epoch_used: int
     version: int
     cipher_suite: str
-    server_proof: Optional[str] = None
-    rekey_ack: Optional[bool] = None
+    server_proof: str | None = None
+    rekey_ack: bool | None = None
 
 
 class RevokeRequest(BaseModel):
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
 
 
 class GenerateLicenseRequest(BaseModel):
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
 
 
 class Policy(BaseModel):
     max_sessions: int = Field(gt=0)
     version: str
-    features: List[str] = Field(default_factory=list)
+    features: list[str] = Field(default_factory=list)
 
 
 class SessionData(BaseModel):
@@ -94,4 +97,4 @@ class SessionData(BaseModel):
     transcript_hash: str
     rekey_epoch: int
     last_renew_at: int
-    last_cipher_hash: Optional[bytes] = None
+    last_cipher_hash: bytes | None = None

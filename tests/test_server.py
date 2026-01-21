@@ -1,22 +1,16 @@
+
 import pytest
-import tempfile
-import json
-from pathlib import Path
-from fastapi.testclient import TestClient
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from easylic.server.core import LicenseServer
+from fastapi.testclient import TestClient
+
 from easylic.common.config import Config
-
-
-
+from easylic.server.core import LicenseServer
 
 
 @pytest.fixture
 def temp_keys_dir(tmp_path):
     """Create temporary keys directory with test keys."""
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
     keys_dir = tmp_path / "keys"
     keys_dir.mkdir()
@@ -66,7 +60,7 @@ def test_server_health_endpoint(temp_keys_dir):
     server = LicenseServer(server_keys_dir=temp_keys_dir)
     # Since server uses FastAPI app, we need to test the endpoint
     # This is a placeholder - in real implementation would use TestClient
-    assert hasattr(server, 'app')
+    assert hasattr(server, "app")
     # Test that app has health route
     routes = [route.path for route in server.app.routes]
     assert "/health" in routes
@@ -110,16 +104,13 @@ def test_server_health_endpoint(server):
     """Test health endpoint."""
     # Note: This assumes server has an app attribute or method to get FastAPI app
     # For now, placeholder
-    pass
 
 
 def test_server_start_endpoint_invalid_features(server):
     """Test /start endpoint with missing required features."""
     # Placeholder - would need to mock the app
-    pass
 
 
 def test_server_renew_endpoint_invalid_counter(server):
     """Test /renew endpoint with invalid counter."""
     # Placeholder
-    pass

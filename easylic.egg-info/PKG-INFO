@@ -1,12 +1,13 @@
 Metadata-Version: 2.4
 Name: easylic
 Version: 0.0.0
+Summary: THPL Easy Licensing
+Author: THPL
 License-File: LICENSE_STATE_MACHINE.md
+Requires-Dist: click
 Requires-Dist: fastapi
-Requires-Dist: uvicorn
+Requires-Dist: uvicorn[standard]
 Requires-Dist: pydantic
 Requires-Dist: cryptography
 Requires-Dist: requests
-Requires-Dist: click
 Dynamic: license-file
-Dynamic: requires-dist

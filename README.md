@@ -1,4 +1,121 @@
-# THPL Easy Licensing Documentation
+# EasyLic: THPL Easy Licensing
+
+EasyLic is a secure, cryptographic license server built with FastAPI and cryptography libraries. It provides a robust licensing solution with features like session management, revocation, and protection against various attacks.
+
+## Features
+
+- **Secure Sessions**: Uses ChaCha20Poly1305 AEAD encryption
+- **Proof of Possession**: Ed25519 digital signatures for client authentication
+- **Session Management**: Automatic rekeying every 10 renewals
+- **License Revocation**: Immediate termination of all sessions for revoked licenses
+- **Rate Limiting**: Protection against abuse and DoS attacks
+- **Admin Interface**: Web-based admin panel for managing licenses
+- **Docker Support**: Easy deployment with Docker
+
+## Installation
+
+### Prerequisites
+
+- Python 3.8+
+- pip
+
+### Install from Source
+
+```bash
+git clone <repository-url>
+cd easylic
+pip install -e .
+```
+
+### Generate Server Keys
+
+Before running the server, generate Ed25519 key pair:
+
+```bash
+easylic keygen
+```
+
+This creates `easylic/server/server_public.key` and `easylic/server/server_private.key`.
+
+## Configuration
+
+EasyLic uses environment variables for configuration. Set them before running:
+
+- `SERVER_HOST`: Server host (default: 127.0.0.1)
+- `SERVER_PORT`: Server port (default: 8000)
+- `ADMIN_PASSWORD`: Password for admin operations (default: admin)
+- `LOG_LEVEL`: Logging level (default: INFO)
+
+Example:
+
+```bash
+export SERVER_HOST=0.0.0.0
+export SERVER_PORT=8000
+export ADMIN_PASSWORD=mysupersecretpassword
+```
+
+## Running the Server
+
+### Local Development
+
+Start the server:
+
+```bash
+easylic server
+```
+
+The server will start on the configured host and port (default: http://127.0.0.1:8000).
+
+### Docker
+
+#### Build the Image
+
+```bash
+docker build -t easylic .
+```
+
+#### Run the Container
+
+To persist keys between container restarts, use a volume:
+
+```bash
+docker run -v $(pwd)/easylic/server:/home/app/easylic/server -p 8000:8000 easylic
+```
+
+- The first run will generate keys inside the container (and save them to the host via volume).
+- Subsequent runs will reuse existing keys.
+- Access the server at http://localhost:8000.
+
+For one-time runs (keys are lost on container stop):
+
+```bash
+docker run -p 8000:8000 easylic
+```
+
+## Usage
+
+### Admin Interface
+
+Visit http://localhost:8000/admin to access the admin panel. Use the admin password to revoke licenses or generate new ones.
+
+### API Endpoints
+
+- `GET /health` - Health check
+- `POST /start` - Start a new session
+- `POST /renew` - Renew an existing session
+- `POST /revoke` - Revoke a license (requires admin password)
+- `POST /generate_license` - Generate a new license (requires admin password)
+- `GET /admin` - Admin interface
+
+### Client Usage
+
+See `examples/client/` for usage examples:
+
+- `basic_usage.py` - Simple client usage
+- `threaded_usage.py` - Multi-threaded client
+- `status_check.py` - Check license status
+
+## API Documentation
 
 ## Revoke Propagation Semantics
 
@@ -194,3 +311,25 @@ To prevent replay attacks and DoS on session establishment:
 ## Nonce Prefix Immutability
 
 The `nonce_prefix` is generated randomly during `/start` and remains immutable for the entire session lifetime. It is never modified, even during rekey operations, to ensure AEAD nonce uniqueness and prevent accidental nonce reuse that could compromise security.
+
+## Development
+
+### Testing
+
+Run tests:
+
+```bash
+pytest
+```
+
+### Linting
+
+Check code quality:
+
+```bash
+ruff check .
+```
+
+## License
+
+THPL Easy Licensing - All rights reserved.

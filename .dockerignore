@@ -49,10 +49,8 @@ logs/
 # Docker
 Dockerfile
 .dockerignore
-docker-entrypoint.sh
 
 # Documentation
-*.md
 docs/
 
 # Tests (optional - can be included for CI)

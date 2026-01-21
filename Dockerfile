@@ -41,5 +41,4 @@ EXPOSE 8000
 
 # Entrypoint script to generate keys if needed and start server
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]

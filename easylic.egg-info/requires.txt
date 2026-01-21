@@ -1,6 +1,6 @@
+click
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 cryptography
 requests
-click

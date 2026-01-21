@@ -1,11 +1,13 @@
 # Integration tests
-import pytest
 import json
 import time
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+import pytest
 from cryptography.hazmat.primitives import serialization
-from easylic.server.core import LicenseServer
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from easylic.client.client import LicenseClient
+from easylic.server.core import LicenseServer
 
 
 @pytest.fixture
@@ -92,4 +94,3 @@ def test_full_integration_flow(temp_setup):
 def test_client_server_key_exchange(temp_setup):
     """Test that client and server can exchange keys."""
     # Placeholder - would test key loading and validation
-    pass

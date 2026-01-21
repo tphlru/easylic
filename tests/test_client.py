@@ -1,7 +1,9 @@
-import pytest
 import json
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+import pytest
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
 from easylic.client.client import LicenseClient
 
 
@@ -76,14 +78,14 @@ def test_client_is_license_active_no_session(client):
 def test_client_start_session_placeholder(client):
     """Placeholder for start_session test - full mocking is complex."""
     # Test that client has required attributes
-    assert hasattr(client, 'start_session')
-    assert hasattr(client, 'server_url')
+    assert hasattr(client, "start_session")
+    assert hasattr(client, "server_url")
     assert client.server_url == "http://localhost:8080"
 
 
 def test_client_renew_session_placeholder(client):
     """Placeholder for renew_session test - requires complex session state setup."""
     # Test that client has required attributes
-    assert hasattr(client, 'renew_session')
-    assert hasattr(client, 'counter')
+    assert hasattr(client, "renew_session")
+    assert hasattr(client, "counter")
     assert client.counter == 0

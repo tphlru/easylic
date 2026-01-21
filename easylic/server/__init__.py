@@ -2,12 +2,11 @@
 Entry point for the license server.
 """
 
+import uvicorn
+
 from .core import LicenseServer
 
 
-def main():
-    import uvicorn
+def main() -> None:
     server = LicenseServer()
-    server._setup_routes()  # Setup routes after initialization
-    app = server.app
-    uvicorn.run(app, host=server.server_host, port=server.server_port)
+    uvicorn.run(server.app, host=server.server_host, port=server.server_port)

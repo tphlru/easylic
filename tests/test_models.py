@@ -1,5 +1,6 @@
 import pytest
-from easylic.common.models import LicenseData, Policy, StartRequest, RenewRequest
+
+from easylic.common.models import LicenseData, Policy, RenewRequest, StartRequest
 
 
 def test_license_data_model():

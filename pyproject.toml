@@ -2,6 +2,22 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "easylic"
+version = "0.0.0"
+description = "THPL Easy Licensing"
+authors = [{name = "THPL"}]
+dependencies = [
+    "click",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "cryptography",
+    "requests",
+]
+[project.scripts]
+easylic = "easylic.cli:cli"
+
 [tool.ruff]
 line-length = 88
 target-version = "py38"
@@ -15,7 +31,7 @@ ignore = ["S101", "S104", "COM812", "ISC001"]
 "tests/**/*" = ["S101"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -28,6 +44,7 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+ignore_missing_imports = true
 
 # Test configuration
 [tool.pytest.ini_options]
@@ -41,3 +58,5 @@ addopts = [
     "--verbose",
     "--tb=short",
 ]
+
+
