@@ -10,9 +10,9 @@ def test_license_data_model():
             "product": "test",
             "valid_from": 1000,
             "valid_until": 2000,
-            "policy": {"version": "1.0", "max_sessions": 1}
+            "policy": {"version": "1.0", "max_sessions": 1},
         },
-        "signature": "test_signature"
+        "signature": "test_signature",
     }
     license = LicenseData(**license_data)
     assert license.payload.license_id == "1"
@@ -44,10 +44,26 @@ def test_policy_validation():
 def test_start_request_model():
     req = StartRequest(
         version=1,
-        license={"payload": {"license_id": "1", "product": "test", "valid_from": 1000, "valid_until": 2000, "policy": {"version": "1.0", "max_sessions": 1}}, "signature": "sig"},
+        license={
+            "payload": {
+                "license_id": "1",
+                "product": "test",
+                "valid_from": 1000,
+                "valid_until": 2000,
+                "policy": {"version": "1.0", "max_sessions": 1},
+            },
+            "signature": "sig",
+        },
         client_pubkey="pubkey",
         client_eph_pub="ephpub",
-        supported_features={"secure_channel": True, "counter": True, "pop": True, "transcript_binding": True, "rekey": True, "proofs": True}
+        supported_features={
+            "secure_channel": True,
+            "counter": True,
+            "pop": True,
+            "transcript_binding": True,
+            "rekey": True,
+            "proofs": True,
+        },
     )
     assert req.version == 1
     assert req.license.payload.license_id == "1"

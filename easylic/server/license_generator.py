@@ -21,22 +21,29 @@ from easylic.common.models import LicenseData, LicensePayload, Policy
 class LicenseGenerator:
     """License generator for creating signed licenses."""
 
-    def __init__(self, log_level: int = Config.LOG_LEVEL):
+    def __init__(
+        self,
+        config: "Config | None" = None,
+        server_priv: "Ed25519PrivateKey | None" = None,
+        log_level: int | None = None,
+    ):
+        self.config = config or Config()
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
+        self.log_level = log_level if log_level is not None else self.config.LOG_LEVEL
+        self.logger.setLevel(self.log_level)
         if not self.logger.handlers:
             handler = logging.StreamHandler()
-            handler.setLevel(log_level)
+            handler.setLevel(self.log_level)
             formatter = logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
-        self.server_priv: Ed25519PrivateKey = self._load_private_key()
+        self.server_priv = server_priv or self._load_private_key()
 
     def _load_private_key(self) -> Ed25519PrivateKey:
         """Load server private key."""
-        with Config.SERVER_PRIVATE_KEY_PATH.open("rb") as f:
+        with self.config.SERVER_PRIVATE_KEY_PATH.open("rb") as f:
             return cast(
                 "Ed25519PrivateKey", serialization.load_pem_private_key(f.read(), None)
             )
@@ -50,7 +57,7 @@ class LicenseGenerator:
         """Validate policy structure."""
         try:
             Policy(**policy)
-            return policy.get("version") == Config.POLICY_VERSION
+            return policy.get("version") == self.config.POLICY_VERSION
         except (ValueError, TypeError):
             return False
 
@@ -100,7 +107,7 @@ class LicenseGenerator:
 
         policy = {
             "max_sessions": max_sessions,
-            "version": Config.POLICY_VERSION,
+            "version": self.config.POLICY_VERSION,
             "features": features,
         }
 

@@ -24,11 +24,11 @@ def temp_setup(tmp_path):
     private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     )
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
     (keys_dir / "server_private.key").write_bytes(private_pem)
@@ -41,12 +41,9 @@ def temp_setup(tmp_path):
             "product": "IntegrationTest",
             "valid_from": int(time.time()),
             "valid_until": int(time.time()) + 3600,  # 1 hour
-            "policy": {
-                "version": "1.0",
-                "max_sessions": 1
-            }
+            "policy": {"version": "1.0", "max_sessions": 1},
         },
-        "signature": "integration-test-signature"
+        "signature": "integration-test-signature",
     }
 
     license_file = base_dir / "license.json"
@@ -57,7 +54,7 @@ def temp_setup(tmp_path):
         "keys_dir": keys_dir,
         "license_file": license_file,
         "server_host": "127.0.0.1",
-        "server_port": 8888
+        "server_port": 8888,
     }
 
 
@@ -66,11 +63,11 @@ def test_full_integration_flow(temp_setup):
     setup = temp_setup
 
     # Start server in background
-    server = LicenseServer(
+    _server = LicenseServer(
         server_keys_dir=setup["keys_dir"],
         license_file_path=setup["license_file"],
         server_host=setup["server_host"],
-        server_port=setup["server_port"]
+        server_port=setup["server_port"],
     )
 
     # Note: In real implementation, would start server with uvicorn in thread
@@ -80,7 +77,7 @@ def test_full_integration_flow(temp_setup):
     client = LicenseClient(
         server_url=f"http://{setup['server_host']}:{setup['server_port']}",
         license_file=str(setup["license_file"]),
-        server_keys_dir=setup["keys_dir"]
+        server_keys_dir=setup["keys_dir"],
     )
 
     # Test that client can be created and initialized

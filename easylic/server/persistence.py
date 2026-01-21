@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 from easylic.common.models import SessionData
 
@@ -18,7 +19,7 @@ class DataPersistence:
         """Load revoked licenses from file."""
         try:
             with file_path.open() as f:
-                return json.load(f)
+                return cast(dict[str, int], json.load(f))
         except FileNotFoundError:
             return {}
 

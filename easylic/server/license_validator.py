@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,9 +21,17 @@ from easylic.common.models import LicenseData, Policy
 class LicenseValidator:
     """Handles license validation and policy checking."""
 
-    def __init__(self, server_pub: Ed25519PublicKey, revoked_licenses: dict[str, int]):
+    def __init__(
+        self,
+        config: "Config",
+        server_pub: Ed25519PublicKey,
+        revoked_licenses: dict[str, int],
+        revoked_licenses_file_path: Path,
+    ):
+        self.config = config
         self.server_pub = server_pub
         self.revoked_licenses = revoked_licenses
+        self.revoked_licenses_file_path = revoked_licenses_file_path
 
     def verify_license(self, lic: LicenseData) -> bool:
         """Verify license signature and validity."""
@@ -46,6 +55,6 @@ class LicenseValidator:
         """Server-side validation for policy."""
         try:
             Policy(**policy)
-            return policy.get("version") == Config.POLICY_VERSION
+            return policy.get("version") == self.config.POLICY_VERSION
         except (ValueError, TypeError):
             return False

@@ -4,12 +4,11 @@ Command-line interface for THPL Easy Licensing.
 
 from __future__ import annotations
 
-import importlib
 import os
 
 import click
 
-import easylic.common.config
+from easylic.common.config import Config
 
 from .server import main as server_main
 from .server.keygen import main as keygen_main
@@ -33,6 +32,7 @@ def keygen(keys_dir: str | None) -> None:
         os.environ["EASYLIC_KEYS_DIR"] = keys_dir
 
     keygen_main()
+    click.echo("Keys generated and saved")
 
 
 @cli.command()
@@ -62,19 +62,16 @@ def serve(keys_dir: str | None, host: str | None, port: int | None) -> None:
     if port:
         os.environ["SERVER_PORT"] = str(port)
 
-    # Warn about default admin password
-    admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
-    if admin_password == "admin123":
-        click.echo(
-            "WARNING: Using default admin password 'admin123'. "
-            "Set ADMIN_PASSWORD environment variable to a secure password.",
-            err=True,
-        )
+    # Require ADMIN_PASSWORD
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    if not admin_password:
+        msg = "ERROR: ADMIN_PASSWORD environment variable must be set to a secure password."
+        raise click.ClickException(msg)
 
-    # Force reload of config after env vars are set
-    importlib.reload(easylic.common.config)
+    # Create config with updated env vars
+    config = Config()
 
-    server_main()
+    server_main(config)
 
 
 @cli.command()

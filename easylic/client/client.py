@@ -42,14 +42,14 @@ class LicenseClient:
         self,
         server_url: str | None = None,
         license_file: str | None = None,
-        log_level: int = Config.LOG_LEVEL,
+        log_level: int | None = None,
         on_error_callback: Callable[[Exception], None] | None = None,
-        renew_interval: int = Config.RENEW_INTERVAL_DEFAULT,
-        session_ttl: int = Config.SESSION_TTL,
-        max_counter: int = Config.MAX_COUNTER,
-        max_start_attempts_per_minute: int = Config.MAX_START_ATTEMPTS_PER_MINUTE,
-        max_ciphertext_len: int = Config.MAX_CIPHERTEXT_LEN,
-        max_used_eph_pubs_per_license: int = Config.MAX_USED_EPH_PUBS_PER_LICENSE,
+        renew_interval: int | None = None,
+        session_ttl: int | None = None,
+        max_counter: int | None = None,
+        max_start_attempts_per_minute: int | None = None,
+        max_ciphertext_len: int | None = None,
+        max_used_eph_pubs_per_license: int | None = None,
         server_host: str | None = None,
         server_port: int | None = None,
         base_dir: Path | None = None,
@@ -57,36 +57,66 @@ class LicenseClient:
         license_file_path: Path | None = None,
         revoked_licenses_file_path: Path | None = None,
     ):
+        self.config: Config = Config()
+
         # Compute server_url if host and port provided
         if server_host and server_port:
             self.server_url = f"http://{server_host}:{server_port}"
         else:
-            self.server_url = server_url or Config.SERVER_URL
+            self.server_url = server_url or self.config.SERVER_URL
 
         # Configurable paths
-        self.base_dir = base_dir or Config.BASE_DIR
-        self.server_keys_dir = server_keys_dir or Config.SERVER_KEYS_DIR
-        self.license_file_path = license_file_path or Config.LICENSE_FILE_PATH
+        self.base_dir = base_dir or self.config.BASE_DIR
+        self.server_keys_dir = server_keys_dir or self.config.SERVER_KEYS_DIR
+        self.license_file_path = license_file_path or self.config.LICENSE_FILE_PATH
         self.revoked_licenses_file_path = (
-            revoked_licenses_file_path or Config.REVOKED_LICENSES_FILE_PATH
+            revoked_licenses_file_path or self.config.REVOKED_LICENSES_FILE_PATH
         )
 
         self.license_file = license_file or self.license_file_path
         self.on_error_callback = on_error_callback
-        self.renew_interval = renew_interval
         self.session_ttl = session_ttl
         self.max_counter = max_counter
         self.max_start_attempts_per_minute = max_start_attempts_per_minute
         self.max_ciphertext_len = max_ciphertext_len
-        self.max_used_eph_pubs_per_license = max_used_eph_pubs_per_license
+        self.log_level: int = (
+            log_level if log_level is not None else self.config.LOG_LEVEL
+        )
+        self.on_error_callback = on_error_callback
+        self.renew_interval: int = (
+            renew_interval
+            if renew_interval is not None
+            else self.config.RENEW_INTERVAL_DEFAULT
+        )
+        self.session_ttl = (
+            session_ttl if session_ttl is not None else self.config.SESSION_TTL
+        )
+        self.max_counter = (
+            max_counter if max_counter is not None else self.config.MAX_COUNTER
+        )
+        self.max_start_attempts_per_minute = (
+            max_start_attempts_per_minute
+            if max_start_attempts_per_minute is not None
+            else self.config.MAX_START_ATTEMPTS_PER_MINUTE
+        )
+        self.max_ciphertext_len = (
+            max_ciphertext_len
+            if max_ciphertext_len is not None
+            else self.config.MAX_CIPHERTEXT_LEN
+        )
+        self.max_used_eph_pubs_per_license = (
+            max_used_eph_pubs_per_license
+            if max_used_eph_pubs_per_license is not None
+            else self.config.MAX_USED_EPH_PUBS_PER_LICENSE
+        )
         self._thread: threading.Thread | None = None
 
         # Setup logging
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
+        self.logger.setLevel(self.log_level)
         if not self.logger.handlers:
             handler = logging.StreamHandler()
-            handler.setLevel(log_level)
+            handler.setLevel(self.log_level)
             formatter = logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
@@ -128,12 +158,13 @@ class LicenseClient:
         # Initialize session handler
         self.session_handler = SessionHandler(
             server_url=self.server_url,
-            license=self.license,
+            license_data=self.license,
             client_priv=self.client_priv,
             client_pub_hex=self.client_pub_hex,
             client_eph_priv=self.client_eph_priv,
             client_eph_pub_hex=self.client_eph_pub_hex,
             server_pub=self.server_pub,
+            config=self.config,
         )
 
     @property

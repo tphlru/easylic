@@ -20,7 +20,8 @@ class KeyGenerator:
     """Key generator for creating server Ed25519 keys."""
 
     def __init__(self, keys_dir: Path | None = None):
-        self.keys_dir = keys_dir or Config.SERVER_KEYS_DIR
+        config = Config()
+        self.keys_dir = keys_dir or config.SERVER_KEYS_DIR
 
     def generate_keys(self) -> None:
         """Generate and save server public/private keys."""

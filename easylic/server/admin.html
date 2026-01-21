@@ -3,122 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
-
+    <title>EasyLic Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #333; }
+        form { margin-bottom: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        label { display: block; margin-bottom: 5px; }
+        input, button { padding: 8px; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .response { margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+    </style>
 </head>
 <body>
-    <h1>License Admin Panel</h1>
+    <div class="container">
+        <h1>EasyLic Admin Panel</h1>
 
-    <h2>Revoke License</h2>
-    <form id="revokeForm">
-        <label for="revokeLicenseId">License ID:</label>
-        <input type="text" id="revokeLicenseId" required><br>
-        <label for="adminPassword">Admin Password:</label>
-        <input type="password" id="adminPassword" required>
-        <button type="submit">Revoke</button>
-    </form>
+        <form id="revokeForm">
+            <h2>Revoke License</h2>
+            <label for="revokeLicenseId">License ID:</label>
+            <input type="text" id="revokeLicenseId" required>
+            <label for="revokePassword">Admin Password:</label>
+            <input type="password" id="revokePassword" required>
+            <button type="submit">Revoke License</button>
+        </form>
 
-    <h2>Generate License</h2>
-    <form id="generateForm">
-        <label for="genLicenseId">License ID:</label>
-        <input type="text" id="genLicenseId" required><br>
-        <label for="product">Product:</label>
-        <input type="text" id="product" required><br>
-        <label for="validFrom">Valid From (timestamp):</label>
-        <input type="number" id="validFrom" required><br>
-        <label for="validUntil">Valid Until (timestamp):</label>
-        <input type="number" id="validUntil" required><br>
-        <label for="maxSessions">Max Sessions:</label>
-        <input type="number" id="maxSessions" required><br>
-        <label for="adminPassword">Admin Password:</label>
-        <input type="password" id="adminPassword" required><br>
-        <button type="submit">Generate</button>
-    </form>
+        <div id="revokeResponse" class="response" style="display: none;"></div>
 
-     <div id="result" style="display:none;">
-         <h3>License Generated</h3>
-         <textarea id="licenseText" rows="20" cols="80" readonly></textarea><br>
-         <button id="copyBtn">Copy to Clipboard</button>
-         <button id="downloadBtn">Download License</button>
-     </div>
+        <form id="generateForm">
+            <h2>Generate License</h2>
+            <label for="genLicenseId">License ID:</label>
+            <input type="text" id="genLicenseId" required>
+            <label for="genProduct">Product:</label>
+            <input type="text" id="genProduct" required>
+            <label for="genValidFrom">Valid From (Unix timestamp):</label>
+            <input type="number" id="genValidFrom" required>
+            <label for="genValidUntil">Valid Until (Unix timestamp):</label>
+            <input type="number" id="genValidUntil" required>
+            <label for="genMaxSessions">Max Sessions:</label>
+            <input type="number" id="genMaxSessions" value="1" required>
+            <label for="genFeatures">Features (comma-separated):</label>
+            <input type="text" id="genFeatures">
+            <label for="genPassword">Admin Password:</label>
+            <input type="password" id="genPassword" required>
+            <button type="submit">Generate License</button>
+        </form>
+
+        <div id="generateResponse" class="response" style="display: none;"></div>
+    </div>
 
     <script>
+        const revokeForm = document.getElementById('revokeForm');
+        const generateForm = document.getElementById('generateForm');
+        const revokeResponse = document.getElementById('revokeResponse');
+        const generateResponse = document.getElementById('generateResponse');
 
-
-        document.getElementById('revokeForm').addEventListener('submit', async (e) => {
+        revokeForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const licenseId = document.getElementById('revokeLicenseId').value;
-            const password = document.getElementById('adminPassword').value;
-            const payload = { license_id: licenseId, password: password };
-            const response = await fetch('/revoke', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payload })
-            });
-            const result = await response.json();
-            if (response.ok) {
-                alert('License revoked successfully');
-            } else {
-                alert('Error: ' + result.detail);
+            const password = document.getElementById('revokePassword').value;
+
+            try {
+                const response = await fetch('/revoke', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        payload: { license_id: licenseId, password: password }
+                    })
+                });
+                const result = await response.json();
+                revokeResponse.style.display = 'block';
+                revokeResponse.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                revokeResponse.style.display = 'block';
+                revokeResponse.textContent = 'Error: ' + error.message;
             }
         });
 
-        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+        generateForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const licenseId = document.getElementById('genLicenseId').value;
-            const product = document.getElementById('product').value;
-            const validFrom = parseInt(document.getElementById('validFrom').value);
-            const validUntil = parseInt(document.getElementById('validUntil').value);
-            const maxSessions = parseInt(document.getElementById('maxSessions').value);
-            const password = document.getElementById('adminPassword').value;
-            const payload = {
-                license_id: licenseId,
-                product: product,
-                valid_from: validFrom,
-                valid_until: validUntil,
-                policy: { max_sessions: maxSessions, version: "1.0" },
-                password: password
-            };
-            const response = await fetch('/generate_license', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payload })
-            });
-            if (response.ok) {
-                const blob = await response.blob();
-                const text = await blob.text();
-                const result = JSON.parse(text);
-                document.getElementById('licenseText').value = JSON.stringify(result, null, 2);
-                document.getElementById('result').style.display = 'block';
-                
-                // Trigger download
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `license_${licenseId}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } else {
-                const error = await response.json();
-                alert('Error: ' + error.detail);
+            const product = document.getElementById('genProduct').value;
+            const validFrom = parseInt(document.getElementById('genValidFrom').value);
+            const validUntil = parseInt(document.getElementById('genValidUntil').value);
+            const maxSessions = parseInt(document.getElementById('genMaxSessions').value);
+            const features = document.getElementById('genFeatures').value.split(',').map(f => f.trim()).filter(f => f);
+            const password = document.getElementById('genPassword').value;
+
+            try {
+                const response = await fetch('/generate_license', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        payload: {
+                            license_id: licenseId,
+                            product: product,
+                            valid_from: validFrom,
+                            valid_until: validUntil,
+                            policy: {
+                                version: "1.0",
+                                max_sessions: maxSessions,
+                                features: features
+                            },
+                            password: password
+                        }
+                    })
+                });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `license_${licenseId}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    generateResponse.style.display = 'block';
+                    generateResponse.textContent = 'License generated and downloaded successfully';
+                } else {
+                    const error = await response.text();
+                    generateResponse.style.display = 'block';
+                    generateResponse.textContent = 'Error: ' + error;
+                }
+            } catch (error) {
+                generateResponse.style.display = 'block';
+                generateResponse.textContent = 'Error: ' + error.message;
             }
-            document.getElementById('copyBtn').onclick = () => {
-                const textArea = document.getElementById('licenseText');
-                textArea.select();
-                textArea.setSelectionRange(0, 99999); // For mobile devices
-                alert('License text selected! Press Ctrl+C (Cmd+C on Mac) to copy.');
-            };
-            document.getElementById('downloadBtn').onclick = () => {
-                const blob = new Blob([document.getElementById('licenseText').value], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `license_${licenseId}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            };
         });
     </script>
 </body>

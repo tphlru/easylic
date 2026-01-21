@@ -16,12 +16,9 @@ def temp_license_file(tmp_path):
             "product": "TestProduct",
             "valid_from": 1000000000,
             "valid_until": 2000000000,
-            "policy": {
-                "version": "1.0",
-                "max_sessions": 1
-            }
+            "policy": {"version": "1.0", "max_sessions": 1},
         },
-        "signature": "test-signature-hex"
+        "signature": "test-signature-hex",
     }
 
     license_file = tmp_path / "license.json"
@@ -39,14 +36,14 @@ def temp_keys_dir(tmp_path):
     private_key = Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
 
-    private_pem = private_key.private_bytes(
+    _private_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     )
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
     (keys_dir / "server_public.key").write_bytes(public_pem)
@@ -59,7 +56,7 @@ def client(temp_license_file, temp_keys_dir):
     return LicenseClient(
         server_url="http://localhost:8080",
         license_file=str(temp_license_file),
-        server_keys_dir=temp_keys_dir
+        server_keys_dir=temp_keys_dir,
     )
 
 

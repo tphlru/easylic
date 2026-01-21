@@ -11,6 +11,7 @@ from easylic.common.models import SessionData
 
 from .persistence import DataPersistence
 
+
 START_ATTEMPT_TTL = 60
 USED_EPH_PUB_TTL = 60
 
@@ -18,14 +19,18 @@ USED_EPH_PUB_TTL = 60
 class SessionManager:
     """Manages sessions and related state."""
 
-    def __init__(self, max_used_eph_pubs_per_license: int, sessions_file_path: Path):
+    def __init__(
+        self,
+        max_used_eph_pubs_per_license: int | None = None,
+        sessions_file_path: Path | None = None,
+    ):
         self.sessions: dict[str, SessionData] = DataPersistence.load_sessions(
-            sessions_file_path
+            sessions_file_path or Path("data/sessions.json")
         )
+        self.max_used_eph_pubs_per_license = max_used_eph_pubs_per_license or 100
         self.start_attempts: dict[str, list[int]] = {}
         self.used_client_eph_pubs: dict[str, dict[bytes, int]] = {}
-        self.max_used_eph_pubs_per_license = max_used_eph_pubs_per_license
-        self.sessions_file_path = sessions_file_path
+        self.sessions_file_path = sessions_file_path or Path("data/sessions.json")
 
     def clean_expired_sessions(self) -> None:
         """Clean expired sessions and related data."""
@@ -34,6 +39,7 @@ class SessionManager:
         for sid in expired:
             self.sessions.pop(sid, None)
 
+        # Clean expired rate limit data
         # Clean expired start attempts (TTL 60s)
         for lid in list(self.start_attempts.keys()):
             self.start_attempts[lid] = [

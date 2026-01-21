@@ -55,6 +55,7 @@ class SessionHandler:
         client_eph_priv: X25519PrivateKey,
         client_eph_pub_hex: str,
         server_pub: Ed25519PublicKey,
+        config: "Config | None" = None,
     ):
         self.server_url = server_url
         self.license_data = license_data
@@ -62,6 +63,7 @@ class SessionHandler:
         self.client_pub_hex = client_pub_hex
         self.client_eph_priv = client_eph_priv
         self.client_eph_pub_hex = client_eph_pub_hex
+        self.config = config or Config()
         self.server_pub = server_pub
 
         # Session state
@@ -79,11 +81,11 @@ class SessionHandler:
         logger.info("Starting session...")
 
         req = StartRequest(
-            version=Config.PROTOCOL_VERSION,
+            version=self.config.PROTOCOL_VERSION,
             license=self.license_data,
             client_pubkey=self.client_pub_hex,
             client_eph_pub=self.client_eph_pub_hex,
-            supported_features=Config.REQUIRED_FEATURES,
+            supported_features=self.config.REQUIRED_FEATURES,
         )
 
         r = requests.post(f"{self.server_url}/start", json=req.model_dump(), timeout=10)
@@ -91,17 +93,17 @@ class SessionHandler:
         resp = StartResponse.model_validate(r.json())
 
         # Verify protocol version
-        if resp.protocol_version != Config.PROTOCOL_VERSION:
+        if resp.protocol_version != self.config.PROTOCOL_VERSION:
             msg = "Protocol version mismatch"
             raise ValueError(msg)
 
         # Verify cipher suite
-        if resp.cipher_suite != Config.CIPHER_SUITE:
+        if resp.cipher_suite != self.config.CIPHER_SUITE:
             msg = "Cipher suite mismatch"
             raise ValueError(msg)
 
         # Verify required features
-        if resp.required_features != Config.REQUIRED_FEATURES:
+        if resp.required_features != self.config.REQUIRED_FEATURES:
             msg = "Required features mismatch"
             raise ValueError(msg)
 
@@ -179,8 +181,8 @@ class SessionHandler:
             session_id=self.session_id,
             counter=self.counter,
             client_sig=client_sig,
-            version=Config.PROTOCOL_VERSION,
-            cipher_suite=Config.CIPHER_SUITE,
+            version=self.config.PROTOCOL_VERSION,
+            cipher_suite=self.config.CIPHER_SUITE,
         )
         if self.counter == 0:
             renew_data.client_proof = hmac.new(
@@ -196,7 +198,7 @@ class SessionHandler:
         )
         nonce = effective_prefix + self.counter.to_bytes(8, "big")
         aad_str = (
-            f"renew:{Config.CIPHER_SUITE}:{self.session_id}:"
+            f"renew:{self.config.CIPHER_SUITE}:{self.session_id}:"
             f"{self.license_data.payload.license_id}:{self.client_pub_hex}:"
             f"{self.transcript_hash}:{self.rekey_epoch}"
         )
@@ -249,7 +251,7 @@ class SessionHandler:
         resp_aead = ChaCha20Poly1305(resp_session_key)
 
         resp_aad_str = (
-            f"renew:{Config.CIPHER_SUITE}:{self.session_id}:"
+            f"renew:{self.config.CIPHER_SUITE}:{self.session_id}:"
             f"{self.license_data.payload.license_id}:{self.client_pub_hex}:"
             f"{self.transcript_hash}:{epoch_used}"
         )
@@ -263,10 +265,10 @@ class SessionHandler:
         )
         resp_plain = RenewResponseData.model_validate(resp_plain_dict)
 
-        if resp_plain.version != Config.PROTOCOL_VERSION:
+        if resp_plain.version != self.config.PROTOCOL_VERSION:
             logger.error("Protocol version mismatch")
             return False
-        if resp_plain.cipher_suite != Config.CIPHER_SUITE:
+        if resp_plain.cipher_suite != self.config.CIPHER_SUITE:
             logger.error("Cipher suite mismatch")
             return False
 
