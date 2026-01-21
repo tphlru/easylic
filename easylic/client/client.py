@@ -175,6 +175,10 @@ class LicenseClient:
     def counter(self) -> int:
         return self.session_handler.counter
 
+    @property
+    def rekey_epoch(self) -> int:
+        return self.session_handler.rekey_epoch
+
     @staticmethod
     def get_nonce_prefix_for_epoch(initial_nonce_prefix: bytes, epoch: int) -> bytes:
         """Calculate nonce prefix for a given epoch."""
