@@ -1,4 +1,4 @@
-# EasyLic: Secure Online Software Licensing
+# EasyLic // Online Software Licensing by TPHL
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
@@ -115,12 +115,19 @@ Or via API: See [API Reference](#api-reference) for the POST /generate_license e
 ### Prerequisites
 
 - Python 3.8+
-- pip
+
+### Install from PyPI
+
+EasyLic is published on PyPI and can be installed directly:
+
+```bash
+pip install easylic
+```
 
 ### Install from Source
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/tphlru/easylic
 cd easylic
 pip install -e .
 ```
@@ -477,6 +484,7 @@ uvicorn easylic.server.core:app --reload
 ## Changelog
 
 - **v0.0.0**: Initial release with core licensing features. See git log for detailed changes.
+- **v0.1.0**: Published on pip!
 
 ## License
 
