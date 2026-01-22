@@ -1,45 +1,112 @@
-# EasyLic // TPHL Easy Licensing
+# EasyLic: Secure Online Software Licensing
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/License-TPHL-orange.svg)](LICENSE)
 
-A secure, cryptographic license server built with FastAPI and modern cryptography libraries. EasyLic provides robust software licensing with session management, revocation, and comprehensive security features to protect against various attacks.
+EasyLic solves the problem of software piracy by requiring real-time license checks, unlike offline systems that can be easily cracked or shared. It provides a secure, cryptographic license server built with FastAPI, offering session management, revocation, and comprehensive security features. If you're new, start with the Quick Start below.
 
-Welcome! EasyLic helps developers secure their software with online license validation. It prevents piracy through real-time checks and is easy to integrate. If you're new, start with the Quick Start below.
+**Important Security Notes:** Of course, the code should be compiled into a binary/obfuscated, and license checks should be placed not in one place, but throughout the code. We also recommend adding self-checks for code integrity via file hash to prevent tampering.
 
 ## Table of Contents
 
 - [Features](#features)
-- [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Installation](#installation)
 - [CLI Usage](#cli-usage)
 - [Troubleshooting](#troubleshooting)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
-- [Client Usage](#client-usage)
 - [Deployment](#deployment)
-- [Security Overview](#security-overview)
+- [Concepts and Security Overview](#concepts-and-security-overview)
 - [Architecture](#architecture)
-- [License States](#license-states)
-- [License Lifecycle](#license-lifecycle)
+- [FAQ](#faq)
 - [Development](#development)
 - [Contributing](#contributing)
+- [Changelog](#changelog)
 - [License](#license)
 
 ## Features
 
-- **Online Licensing**: Real-time license validation with instant revocation capabilities, centralized management, and usage monitoring - advantages over offline licensing include preventing piracy spread and enabling dynamic license policies
-- **Concurrent Session Control**: License policies enforce `max_sessions` limits, preventing single license keys from being used simultaneously across multiple devices or installations
-- **Cryptographic Security**: Ed25519 signatures (secure digital signatures for authenticity), ChaCha20Poly1305 AEAD encryption (confidentiality and integrity)
-- **Proof of Possession**: Client authentication using digital signatures (proves ownership without revealing secrets)
-- **Session Management**: Automatic rekeying every 10 renewals for forward secrecy
-- **License Revocation**: Immediate termination of all sessions for revoked licenses
-- **Rate Limiting**: Protection against abuse and DoS attacks (10 start attempts/minute per license)
-- **Admin Interface**: Web-based admin panel for license management
-- **Docker Support**: Easy deployment with Docker containers
-- **Client Library**: Python client with automatic session renewal
-- **Threaded Operation**: Background session management for applications
+EasyLic provides everything you need for secure software licensing:
+
+- **Real-Time Validation**: Licenses require online checks, allowing instant revocation and preventing piracy.
+- **Multi-Device Control**: Set limits on concurrent usage to prevent license sharing.
+- **Admin Dashboard**: Web interface for creating, managing, and revoking licenses.
+- **Easy Integration**: Python client library with auto-renewal for seamless app integration.
+- **Docker Ready**: Simple containerized deployment.
+- **Cryptographic Protection**: Advanced security with digital signatures and encryption (see [Concepts and Security Overview](#concepts-and-security-overview) for details).
+
+## Quick Start
+
+### Prerequisites
+
+Before starting, ensure you have Python 3.8+ installed. 
+### Server Setup
+
+1. **Install EasyLic**:
+   ```bash
+   pip install -e .
+   ```
+
+2. **Set Environment Variables**:
+   ```bash
+   export EASYLIC_ADMIN_PASSWORD=your_secure_password_here  # Choose a strong password for admin access
+   export EASYLIC_SERVER_HOST=0.0.0.0  # Bind to all interfaces (or 127.0.0.1 for local only)
+   export EASYLIC_SERVER_PORT=8000  # Default port
+   ```
+
+3. **Generate Keys** (required):
+   ```bash
+   easylic keygen
+   ```
+   This creates cryptographic keys in `./easylic/server`. If you see "Permission denied", ensure the directory exists and is writable: `mkdir -p ./easylic/server`. Or set an alternative directory via `--keys-dir`.
+
+4. **Start Server**:
+   ```bash
+   easylic serve
+   ```
+   The server starts at http://localhost:8000. Visit http://localhost:8000/admin for the admin panel (login with your admin password).
+
+### Client Example
+
+Integrate licensing into your Python app:
+
+```python
+from easylic.client.client import LicenseClient
+
+# Load license and connect to server
+client = LicenseClient()
+
+# Start a secure session
+session_id = client.start_session()
+print(f"Session started: {session_id}")
+
+# Check if license is active
+if client.is_license_active():
+    print("License is valid - your app can run")
+else:
+    print("License invalid - exit app")
+
+# Run with auto-renewal in background
+client.start_in_thread()
+
+# Your app logic here
+while client.is_license_active():
+    # App runs while license is active
+    pass
+```
+
+### Generate a License (Admin)
+
+Use the web admin panel at http://localhost:8000/admin to create licenses interactively.
+
+Or via CLI:
+```bash
+easylic generator
+```
+
+Or via API: See [API Reference](#api-reference) for the POST /generate_license endpoint.
 
 ## Installation
 
@@ -56,88 +123,7 @@ cd easylic
 pip install -e .
 ```
 
-## Quick Start
 
-### Server Setup
-
-1. **Set Environment Variables**:
-```bash
-export EASYLIC_ADMIN_PASSWORD=your_secure_password_here
-export EASYLIC_SERVER_HOST=0.0.0.0
-export EASYLIC_SERVER_PORT=8000
-```
-
-2. **Generate Keys**:
-```bash
-easylic keygen
-```
-
-3. **Start Server**:
-```bash
-easylic serve
-```
-
- The server starts on http://localhost:8000 with admin panel at http://localhost:8000/admin.
-
-**Note:** If commands fail (e.g., "Permission denied" for keygen), ensure directories are writable or run as admin.
-
-### Client Usage Example
-
-```python
-from easylic.client.client import LicenseClient
-
-# Create client (loads license from default location)
-client = LicenseClient()
-
-# Start secure session
-session_id = client.start_session()
-print(f"Session started: {session_id}")
-
-# Check license status
-if client.is_license_active():
-    print("License is active")
-
-# Manual renewal
-success = client.renew_session()
-print(f"Renewal: {'success' if success else 'failed'}")
-
-# Or run in background thread with auto-renewal
-client.start_in_thread()
-
-# Your application logic here
-while client.is_license_active():
-    # Application runs while license is valid
-    pass
-```
-
-### Generate License (Admin)
-
-Use the interactive generator:
-
-```bash
-easylic generator
-```
-
-Or via API (requires admin password to be set via `EASYLIC_ADMIN_PASSWORD` environment variable):
-
-```bash
-curl -X POST http://localhost:8000/generate_license \
-  -H "Content-Type: application/json" \
-  -d '{
-    "password": "your_admin_password",
-    "license_id": "lic-001",
-    "product": "MyApp",
-    "valid_from": 1704067200,
-    "valid_until": 1735689600,
-    "policy": {
-      "version": "1.0",
-      "max_sessions": 1,
-      "features": ["feature1", "feature2"]
-    }
-  }'
-```
-
-**Note:** The `/generate_license` endpoint is only available when `EASYLIC_ADMIN_PASSWORD` environment variable is set on the server. Make sure to send a POST request with JSON body - accessing via GET (e.g., in browser) will result in validation errors.
 
 ## CLI Usage
 
@@ -153,8 +139,8 @@ Run `easylic --help` for full options. All commands respect environment variable
 
 Common issues and solutions:
 
-- **"Key not found" or "Permission denied" on keygen**: Ensure `EASYLIC_KEYS_DIR` (default `./easylic/server`) exists and is writable. Create it with `mkdir -p ./easylic/server`.
-- **Server won't start**: Check if port 8000 is free (`lsof -i :8000`). Set `EASYLIC_SERVER_PORT` to a different value if needed.
+- **"Key not found" or "Permission denied" on keygen**: Ensure `EASYLIC_KEYS_DIR` (default `./easylic/server`) exists and is writable.
+- **Server won't start**: Check if port is free (`lsof -i :8000`). Set `EASYLIC_SERVER_PORT` to a different value if needed.
 - **Client connection fails**: Verify `server_url` in client config points to running server (e.g., `http://localhost:8000`).
 - **License invalid**: Check license file format and dates. Use admin panel to generate test licenses.
 - **Rate limited**: Wait a minute; the server limits start attempts to 10/minute per license.
@@ -314,13 +300,23 @@ docker run -p 8000:8000 easylic
 ### Production Considerations
 
 - Use strong `EASYLIC_ADMIN_PASSWORD`
-- Store keys securely (volume mount or secret management)
+- Store keys securely (volume mount or secret management) and create a backup
 - Configure reverse proxy (nginx) for SSL termination
-- Set appropriate rate limits based on your needs
-- Monitor server logs and health endpoints
-- Backup license database regularly
 
-## Security Overview
+## Concepts and Security Overview
+
+### Key Concepts
+
+To get started, here are some core terms explained simply:
+
+- **Online Licensing**: Requires internet connection for real-time validation, preventing piracy by allowing instant revocation and usage monitoring (unlike offline licenses that can be copied).
+- **Session**: A temporary, secure connection between your app and the license server for validation. Sessions auto-renew and expire if the license is invalid.
+- **Cryptographic Security**: Uses Ed25519 digital signatures (for proving authenticity) and ChaCha20Poly1305 encryption (for secure data transmission) to protect against tampering and eavesdropping.
+- **Proof of Possession**: Clients prove they own the license without revealing secrets, using digital signatures.
+- **Revocation**: Admins can instantly disable licenses, terminating all active sessions.
+- **Concurrent Sessions**: Limits how many devices can use the same license simultaneously, preventing sharing.
+
+### Security Overview
 
 EasyLic implements multiple layers of security to prevent licensing bypass and enforce license policies:
 
@@ -337,23 +333,13 @@ EasyLic implements multiple layers of security to prevent licensing bypass and e
 
 ## Architecture
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Client App    │────│   License Server │────│   Admin Panel   │
-│                 │    │   (FastAPI)      │    │   (Web UI)      │
-│ - LicenseClient │    │                  │    │                 │
-│ - Session Mgmt  │    │ - Session Store  │    │ - Generate Lic  │
-│ - Auto-renewal  │    │ - Key Management │    │ - Revoke Lic    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌────────────────────┐
-                    │  Cryptographic     │
-                    │  Core (Ed25519,    │
-                    │  ChaCha20Poly1305) │
-                    └────────────────────┘
-```
+EasyLic consists of three main components:
+
+- **Client App**: Integrates the `LicenseClient` library for session management and auto-renewal. Communicates securely with the server.
+- **License Server** (FastAPI): Handles validation, session storage, key management, and cryptographic operations. Core security logic resides here.
+- **Admin Panel** (Web UI): Allows admins to generate licenses, revoke them, and monitor usage.
+
+All components rely on shared cryptographic primitives (Ed25519 signatures and ChaCha20Poly1305 encryption) for secure communication.
 
 ## License States
 
@@ -369,29 +355,29 @@ INIT → ACTIVE → REKEY → ACTIVE → EXPIRED → REVOKED
 - **EXPIRED**: License validity period has ended
 - **REVOKED**: License has been administratively revoked
 
-## License Lifecycle
+## FAQ
 
-### Session Establishment (`/start`)
-1. Client sends license data, public keys, and supported features
-2. Server validates license signature and policy
-3. Server checks rate limits (10 attempts/minute per license)
-4. Server generates session keys and nonce prefix
-5. Server responds with encrypted session parameters
+**Q: Why use online licensing instead of offline?**  
+A: Offline licenses can be easily copied and shared. Online licensing requires real-time server validation, enabling instant revocation, usage monitoring, and preventing piracy spread.
 
-### Session Renewal (`/renew`)
-1. Client encrypts renewal request with session key
-2. Server decrypts and validates request
-3. Server checks counter monotonicity and replay protection
-4. Server extends session TTL and increments counter
-5. Every 10 renewals: automatic rekeying occurs
-6. Server responds with encrypted renewal confirmation
+**Q: How does it prevent concurrent usage?**  
+A: Each license has a `max_sessions` limit. If a license is used on more devices than allowed, new sessions are rejected.
 
-### License Revocation (`/revoke`)
-1. Admin sends revocation request with signature
-2. Server validates admin credentials
-3. Server marks license as revoked with timestamp
-4. All active sessions for the license are immediately terminated
-5. Future session starts and renewals are rejected
+**Q: What if the server is down?**  
+A: Clients cache license validity briefly (less than 1 minute usually), but long outages require server availability. Plan for high availability in production.
+
+**Q: Can I use it with non-Python apps?**  
+A: The client is Python-only, but you can integrate via API calls to the server endpoints.
+
+**Q: Common errors: "Connection failed"**  
+A: Ensure server is running and `server_url` in client config points to the correct address (default: http://localhost:8000).
+
+**Q: "License invalid"**  
+A: Check license file format, dates, and ensure it's not revoked via admin panel. Also the keys files on the server must be the same as those used when creating the license. If you reissue them, the server will not be able to validate previously issued licenses, so keep your backups safe!
+
+**Q: Permission denied on keygen**  
+A: Try setting `EASYLIC_KEYS_DIR` to a writable path.
+
 
 ## Development
 
@@ -409,6 +395,8 @@ Check code quality:
 
 ```bash
 ruff check .
+mypy .
+
 ```
 
 ### Development Server
@@ -434,8 +422,12 @@ uvicorn easylic.server.core:app --reload
 - Update documentation for API changes
 - Ensure all tests pass before submitting PR
 
+## Changelog
+
+- **v0.0.0**: Initial release with core licensing features. See git log for detailed changes.
+
 ## License
 
-TPHL Easy Licensing - All rights reserved.
+TPHL - All rights reserved.
 
-This software is proprietary and may only be used in accordance with the terms of the license agreement.
+This software may only be used in accordance with the terms of the license agreement.
