@@ -48,7 +48,7 @@ Before starting, ensure you have Python 3.8+ installed.
 
 1. **Install EasyLic**:
    ```bash
-   pip install -e .
+   pip install easylic
    ```
 
 2. **Set Environment Variables**:
