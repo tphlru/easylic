@@ -4,6 +4,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/License-TPHL-orange.svg)](LICENSE)
 
+[Русская версия](readme_ru.md)
+
 EasyLic solves the problem of software piracy by requiring real-time license checks, unlike offline systems that can be easily cracked or shared. It provides a secure, cryptographic license server built with FastAPI, offering session management, revocation, and comprehensive security features. If you're new, start with the Quick Start below.
 
 **Important Security Notes:** Of course, the code should be compiled into a binary/obfuscated, and license checks should be placed not in one place, but throughout the code. We also recommend adding self-checks for code integrity via file hash to prevent tampering.
