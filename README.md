@@ -6,11 +6,15 @@
 
 A secure, cryptographic license server built with FastAPI and modern cryptography libraries. EasyLic provides robust software licensing with session management, revocation, and comprehensive security features to protect against various attacks.
 
+Welcome! EasyLic helps developers secure their software with online license validation. It prevents piracy through real-time checks and is easy to integrate. If you're new, start with the Quick Start below.
+
 ## Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [CLI Usage](#cli-usage)
+- [Troubleshooting](#troubleshooting)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
 - [Client Usage](#client-usage)
@@ -27,8 +31,8 @@ A secure, cryptographic license server built with FastAPI and modern cryptograph
 
 - **Online Licensing**: Real-time license validation with instant revocation capabilities, centralized management, and usage monitoring - advantages over offline licensing include preventing piracy spread and enabling dynamic license policies
 - **Concurrent Session Control**: License policies enforce `max_sessions` limits, preventing single license keys from being used simultaneously across multiple devices or installations
-- **Cryptographic Security**: Ed25519 signatures, ChaCha20Poly1305 AEAD encryption
-- **Proof of Possession**: Client authentication using digital signatures
+- **Cryptographic Security**: Ed25519 signatures (secure digital signatures for authenticity), ChaCha20Poly1305 AEAD encryption (confidentiality and integrity)
+- **Proof of Possession**: Client authentication using digital signatures (proves ownership without revealing secrets)
 - **Session Management**: Automatic rekeying every 10 renewals for forward secrecy
 - **License Revocation**: Immediate termination of all sessions for revoked licenses
 - **Rate Limiting**: Protection against abuse and DoS attacks (10 start attempts/minute per license)
@@ -58,9 +62,9 @@ pip install -e .
 
 1. **Set Environment Variables**:
 ```bash
-export ADMIN_PASSWORD=your_secure_password_here
-export SERVER_HOST=0.0.0.0
-export SERVER_PORT=8000
+export EASYLIC_ADMIN_PASSWORD=your_secure_password_here
+export EASYLIC_SERVER_HOST=0.0.0.0
+export EASYLIC_SERVER_PORT=8000
 ```
 
 2. **Generate Keys**:
@@ -73,7 +77,9 @@ easylic keygen
 easylic serve
 ```
 
-The server starts on http://localhost:8000 with admin panel at http://localhost:8000/admin.
+ The server starts on http://localhost:8000 with admin panel at http://localhost:8000/admin.
+
+**Note:** If commands fail (e.g., "Permission denied" for keygen), ensure directories are writable or run as admin.
 
 ### Client Usage Example
 
@@ -112,7 +118,7 @@ Use the interactive generator:
 easylic generator
 ```
 
-Or via API (requires admin password to be set via `ADMIN_PASSWORD` environment variable):
+Or via API (requires admin password to be set via `EASYLIC_ADMIN_PASSWORD` environment variable):
 
 ```bash
 curl -X POST http://localhost:8000/generate_license \
@@ -131,7 +137,27 @@ curl -X POST http://localhost:8000/generate_license \
   }'
 ```
 
-**Note:** The `/generate_license` endpoint is only available when `ADMIN_PASSWORD` environment variable is set on the server. Make sure to send a POST request with JSON body - accessing via GET (e.g., in browser) will result in validation errors.
+**Note:** The `/generate_license` endpoint is only available when `EASYLIC_ADMIN_PASSWORD` environment variable is set on the server. Make sure to send a POST request with JSON body - accessing via GET (e.g., in browser) will result in validation errors.
+
+## CLI Usage
+
+EasyLic includes command-line tools for key management and server operations:
+
+- **`easylic keygen`**: Generate cryptographic keys for the server. Run this first to create `server.key` and `server.pub` in `EASYLIC_KEYS_DIR`.
+- **`easylic serve`**: Start the license server with configured host/port. Requires keys from keygen.
+- **`easylic generator`**: Interactive tool to create licenses. Prompts for details like license ID, validity, and features.
+
+Run `easylic --help` for full options. All commands respect environment variables like `EASYLIC_KEYS_DIR`.
+
+## Troubleshooting
+
+Common issues and solutions:
+
+- **"Key not found" or "Permission denied" on keygen**: Ensure `EASYLIC_KEYS_DIR` (default `./easylic/server`) exists and is writable. Create it with `mkdir -p ./easylic/server`.
+- **Server won't start**: Check if port 8000 is free (`lsof -i :8000`). Set `EASYLIC_SERVER_PORT` to a different value if needed.
+- **Client connection fails**: Verify `server_url` in client config points to running server (e.g., `http://localhost:8000`).
+- **License invalid**: Check license file format and dates. Use admin panel to generate test licenses.
+- **Rate limited**: Wait a minute; the server limits start attempts to 10/minute per license.
 
 ## Configuration
 
@@ -139,9 +165,9 @@ EasyLic uses environment variables for configuration:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SERVER_HOST` | `127.0.0.1` | Server bind address |
-| `SERVER_PORT` | `8000` | Server port |
-| `ADMIN_PASSWORD` | `admin` | Password for admin operations |
+| `EASYLIC_SERVER_HOST` | `127.0.0.1` | Server bind address |
+| `EASYLIC_SERVER_PORT` | `8000` | Server port |
+| `EASYLIC_ADMIN_PASSWORD` | `admin` | Password for admin operations |
 | `LOG_LEVEL` | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR) |
 | `EASYLIC_KEYS_DIR` | `./easylic/server` | Directory for server keys |
 
@@ -278,7 +304,7 @@ docker build -t easylic .
 ```bash
 # Persistent keys
 docker run -v $(pwd)/easylic/server:/home/app/easylic/server \
-           -e ADMIN_PASSWORD=secure_password \
+           -e EASYLIC_ADMIN_PASSWORD=secure_password \
            -p 8000:8000 easylic
 
 # One-time (keys lost on stop)
@@ -287,7 +313,7 @@ docker run -p 8000:8000 easylic
 
 ### Production Considerations
 
-- Use strong `ADMIN_PASSWORD`
+- Use strong `EASYLIC_ADMIN_PASSWORD`
 - Store keys securely (volume mount or secret management)
 - Configure reverse proxy (nginx) for SSL termination
 - Set appropriate rate limits based on your needs
@@ -316,7 +342,7 @@ EasyLic implements multiple layers of security to prevent licensing bypass and e
 │   Client App    │────│   License Server │────│   Admin Panel   │
 │                 │    │   (FastAPI)      │    │   (Web UI)      │
 │ - LicenseClient │    │                  │    │                 │
-│ - Session Mgmt  │    │ - Session Store   │    │ - Generate Lic  │
+│ - Session Mgmt  │    │ - Session Store  │    │ - Generate Lic  │
 │ - Auto-renewal  │    │ - Key Management │    │ - Revoke Lic    │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
          │                       │                       │
