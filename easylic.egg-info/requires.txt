@@ -1,6 +1,0 @@
-click
-fastapi
-uvicorn[standard]
-pydantic
-cryptography
-requests
