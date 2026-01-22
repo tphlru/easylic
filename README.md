@@ -277,6 +277,56 @@ Revoke a license (admin only).
 #### `POST /generate_license`
 Generate a new license (admin only).
 
+**Request:**
+```json
+{
+  "password": "your_admin_password",
+  "license_id": "lic-001",
+  "product": "MyApp",
+  "valid_from": 1704067200,
+  "valid_until": 1735689600,
+  "policy": {
+    "version": "1.0",
+    "max_sessions": 1,
+    "features": ["feature1", "feature2"]
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "license_id": "lic-001",
+  "product": "MyApp",
+  "valid_from": 1704067200,
+  "valid_until": 1735689600,
+  "policy": {
+    "version": "1.0",
+    "max_sessions": 1,
+    "features": ["feature1", "feature2"]
+  },
+  "signature": "hex-encoded-signature"
+}
+```
+
+**Example cURL:**
+```bash
+curl -X POST http://localhost:8000/generate_license \
+  -H "Content-Type: application/json" \
+  -d '{
+    "password": "your_admin_password",
+    "license_id": "lic-001",
+    "product": "MyApp",
+    "valid_from": 1704067200,
+    "valid_until": 1735689600,
+    "policy": {
+      "version": "1.0",
+      "max_sessions": 1,
+      "features": ["feature1", "feature2"]
+    }
+  }'
+```
+
 ## Deployment
 
 ### Docker Deployment
