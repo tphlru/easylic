@@ -20,19 +20,19 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-from easylic.common.config import Config
 from easylic.common.crypto import CryptoUtils
 from easylic.common.exceptions import RateLimitError, ValidationError
 from easylic.common.models import LicenseData, SessionData, StartRequest
 
 if TYPE_CHECKING:
+    from easylic.common.config import Config
     from easylic.common.interfaces import ILicenseValidator, ISessionManager
 
 
 class StartHandler:
     """Handles start request logic."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         config: Config,
         session_manager: ISessionManager,

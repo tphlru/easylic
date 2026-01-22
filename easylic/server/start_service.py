@@ -2,12 +2,14 @@
 Start service for license server.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import os
 import time
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
@@ -17,23 +19,25 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-from easylic.common.config import Config
 from easylic.common.crypto import CryptoUtils
 from easylic.common.exceptions import RateLimitError, ValidationError
-from easylic.common.models import (
-    LicenseData,
-    SessionData,
-    StartRequest,
-)
-from easylic.server.license_generator import LicenseGenerator
-from easylic.server.license_validator import LicenseValidator
-from easylic.server.session_manager import SessionManager
+
+if TYPE_CHECKING:
+    from easylic.common.config import Config
+    from easylic.common.models import (
+        LicenseData,
+        SessionData,  # noqa: TC004
+        StartRequest,
+    )
+    from easylic.server.license_generator import LicenseGenerator
+    from easylic.server.license_validator import LicenseValidator
+    from easylic.server.session_manager import SessionManager
 
 
 class StartService:
     """Handles start session logic."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         config: Config,
         session_manager: SessionManager,
@@ -79,10 +83,12 @@ class StartService:
     def _validate_start_request(self, req: StartRequest) -> None:
         """Validate protocol version and required features."""
         if req.version != self.config.PROTOCOL_VERSION:
-            raise ValidationError("protocol version mismatch")
+            msg = "protocol version mismatch"
+            raise ValidationError(msg)
         for feature, required in self.config.REQUIRED_FEATURES.items():
             if req.supported_features.get(feature) != required:
-                raise ValidationError(f"required feature not supported: {feature}")
+                msg = f"required feature not supported: {feature}"
+                raise ValidationError(msg)
 
     def _extract_start_data(
         self, req: StartRequest
@@ -104,11 +110,13 @@ class StartService:
         )
         license_id = lic.payload.license_id
         if self.session_manager.is_eph_pub_used(license_id, pub_bytes):
-            raise ValidationError("handshake replay detected")
+            msg = "handshake replay detected"
+            raise ValidationError(msg)
         self.session_manager.record_used_eph_pub(license_id, pub_bytes)
 
         if not self.license_validator.verify_license(lic):
-            raise ValidationError("invalid license")
+            msg = "invalid license"
+            raise ValidationError(msg)
         return license_id
 
     def _validate_license_and_policy(self, lic: LicenseData) -> dict:
@@ -117,11 +125,13 @@ class StartService:
         if not self.session_manager.check_start_attempt_rate(
             license_id, self.max_start_attempts_per_minute
         ):
-            raise RateLimitError("too many start attempts")
+            msg = "too many start attempts"
+            raise RateLimitError(msg)
 
         policy = lic.payload.policy
         if not self.license_validator.validate_policy(policy):
-            raise ValidationError("invalid policy")
+            msg = "invalid policy"
+            raise ValidationError(msg)
         return policy
 
     def _enforce_session_limits(self, license_id: str, policy: dict) -> None:
@@ -129,7 +139,8 @@ class StartService:
         max_sessions = policy["max_sessions"]
         active_sessions = self.session_manager.get_active_sessions_count(license_id)
         if active_sessions >= max_sessions:
-            raise ValidationError("max_sessions exceeded")
+            msg = "max_sessions exceeded"
+            raise ValidationError(msg)
 
     def _generate_keys_and_session(
         self,

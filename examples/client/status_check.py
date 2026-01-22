@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 License status check example.
 
@@ -7,18 +6,20 @@ and monitor session state using the LicenseClient.
 """
 
 import logging
-import os
 import sys
+import time
+from pathlib import Path
 
 # Add the project root to the path to import easylic
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from easylic.client.client import LicenseClient
 
 
-def main():
+def main() -> None:
     # Configure logging
     logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
     try:
         # Create a LicenseClient instance
@@ -26,30 +27,28 @@ def main():
 
         # Start a session first
         session_id = client.start_session()
-        print(f"Session started: {session_id}")
+        logger.info("Session started: %s", session_id)
 
         # Now check the license status multiple times
         for i in range(50):
             is_active = client.is_license_active()
-            print(f"License status check {i + 1}: Active = {is_active}")
+            logger.info("License status check %d: Active = %s", i + 1, is_active)
 
             if is_active:
-                print(f"  Session ID: {client.session_id}")
-                print(f"  Counter: {client.counter}")
-                print(f"  Rekey Epoch: {client.rekey_epoch}")
+                logger.info("  Session ID: %s", client.session_id)
+                logger.info("  Counter: %s", client.counter)
+                logger.info("  Rekey Epoch: %s", client.rekey_epoch)
 
             # Wait a bit and renew once
-            import time
-
             time.sleep(2)
-            if i == 2:  # Renew in the middle
+            if i == 2:  # Renew in the middle  # noqa: PLR2004
                 success = client.renew_session()
-                print(f"Session renewal: {'Success' if success else 'Failed'}")
+                logger.info("Session renewal: %s", "Success" if success else "Failed")
 
-        print("Status check example completed")
+        logger.info("Status check example completed")
 
-    except Exception as e:
-        print(f"Error: {e}")
+    except Exception:
+        logger.exception("Error")
         sys.exit(1)
 
 

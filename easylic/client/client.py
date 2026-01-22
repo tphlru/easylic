@@ -5,19 +5,20 @@ OOP-based license client - Presentation layer.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from easylic.client.application.runner import Runner
 from easylic.client.application.session_manager import SessionManager
 from easylic.client.domain.entities import ClientKeys, License
 from easylic.client.infrastructure.config_loader import ConfigLoader
 from easylic.client.infrastructure.session_handler import SessionHandlerInfra
-from easylic.common.models import ClientConfig
+from easylic.common.models import ClientConfig, LicenseData
 
 
 class LicenseClient:
     """License client for secure session management - Presentation layer."""
 
-    def __init__(self, config: ClientConfig | None = None, **overrides):
+    def __init__(self, config: ClientConfig | None = None, **overrides: Any) -> None:
         if config is None:
             config = ClientConfig(**overrides)
         # Infrastructure layer: Configuration and file loading
@@ -91,7 +92,7 @@ class LicenseClient:
         return self.config_loader.license_file
 
     @property
-    def license(self):
+    def license(self) -> LicenseData:
         """Get license data from domain entity."""
         return self.session_manager.license.data
 

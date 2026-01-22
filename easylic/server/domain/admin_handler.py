@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from fastapi.responses import Response
 
 from easylic.common.exceptions import ValidationError
-from easylic.common.models import GenerateLicenseRequest, RevokeRequest
 from easylic.server.persistence import DataPersistence
 
 if TYPE_CHECKING:
@@ -21,6 +20,7 @@ if TYPE_CHECKING:
         ILicenseValidator,
         ISessionManager,
     )
+    from easylic.common.models import GenerateLicenseRequest, RevokeRequest
 
 
 class AdminHandler:
@@ -42,7 +42,8 @@ class AdminHandler:
         """Handle /revoke endpoint business logic."""
         payload = req.payload
         if admin_password is None or payload.get("password") != admin_password:
-            raise ValidationError("Invalid admin password")
+            msg = "Invalid admin password"
+            raise ValidationError(msg)
 
         license_id = payload["license_id"]
 
@@ -68,7 +69,8 @@ class AdminHandler:
         """Handle /generate_license endpoint business logic."""
         payload = req.payload
         if admin_password is None or payload.get("password") != admin_password:
-            raise ValidationError("Invalid admin password")
+            msg = "Invalid admin password"
+            raise ValidationError(msg)
 
         try:
             license_id = payload["license_id"]
@@ -92,6 +94,8 @@ class AdminHandler:
                 },
             )
         except ValueError as e:
-            raise ValidationError(str(e), 400) from e
+            msg = str(e)
+            raise ValidationError(msg, 400) from e
         except KeyError as e:
-            raise ValidationError("Missing required fields", 400) from e
+            msg = "Missing required fields"
+            raise ValidationError(msg, 400) from e

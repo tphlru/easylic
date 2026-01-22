@@ -2,20 +2,24 @@
 Routes for the license server.
 """
 
+from __future__ import annotations
+
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from easylic.common.models import (
-    GenerateLicenseRequest,
-    RenewRequest,
-    RevokeRequest,
-    StartRequest,
-)
-from easylic.server.services import LicenseService
+if TYPE_CHECKING:
+    from fastapi import FastAPI
+
+    from easylic.common.models import (
+        GenerateLicenseRequest,
+        RenewRequest,
+        RevokeRequest,
+        StartRequest,
+    )
+    from easylic.server.services import LicenseService
 
 
 class LicenseRoutes:

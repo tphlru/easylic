@@ -93,7 +93,8 @@ class Config:
                 )
         except FileNotFoundError as err:
             msg = (
-                f"Server keys not found at {self.SERVER_PUBLIC_KEY_PATH} and {self.SERVER_PRIVATE_KEY_PATH}. "
+                f"Server keys not found at {self.SERVER_PUBLIC_KEY_PATH} and "
+                f"{self.SERVER_PRIVATE_KEY_PATH}. "
                 "Run 'easylic-keygen' to generate them."
             )
             raise ValueError(msg) from err

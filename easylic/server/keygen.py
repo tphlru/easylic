@@ -5,7 +5,7 @@ OOP-based key generator for server Ed25519 keys.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
+from pathlib import Path  # noqa: TC003
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey

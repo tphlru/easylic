@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
@@ -7,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 from easylic.server.keygen import KeyGenerator
 
 
-def test_key_generator_generate_keys(tmp_path):
+def test_key_generator_generate_keys(tmp_path: Path) -> None:
     """Test key generation with temporary directory."""
     keygen = KeyGenerator()
     keygen.keys_dir = tmp_path
@@ -22,16 +24,16 @@ def test_key_generator_generate_keys(tmp_path):
     assert public_path.exists()
 
     # Verify keys can be loaded
-    with open(private_path, "rb") as f:
+    with private_path.open("rb") as f:
         private_key = serialization.load_pem_private_key(f.read(), password=None)
         assert isinstance(private_key, Ed25519PrivateKey)
 
-    with open(public_path, "rb") as f:
+    with public_path.open("rb") as f:
         public_key = serialization.load_pem_public_key(f.read())
         assert isinstance(public_key, Ed25519PublicKey)
 
 
-def test_key_generator_directory_creation(tmp_path):
+def test_key_generator_directory_creation(tmp_path: Path) -> None:
     """Test that directory is created if it doesn't exist."""
     keys_dir = tmp_path / "nested" / "keys"
     keygen = KeyGenerator()

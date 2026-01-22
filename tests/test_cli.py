@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from click.testing import CliRunner
 
 from easylic.cli import cli
 
 
-def test_cli_help():
+def test_cli_help() -> None:
     """Test CLI help command."""
     runner = CliRunner()
     result = runner.invoke(cli, ["--help"])
@@ -11,7 +13,7 @@ def test_cli_help():
     assert "Usage:" in result.output
 
 
-def test_cli_keygen(tmp_path):
+def test_cli_keygen(tmp_path: Path) -> None:
     """Test keygen command."""
     keys_dir = tmp_path / "keys"
     runner = CliRunner()
@@ -24,7 +26,7 @@ def test_cli_keygen(tmp_path):
     assert (keys_dir / "server_public.key").exists()
 
 
-def test_cli_serve_help():
+def test_cli_serve_help() -> None:
     """Test serve command help."""
     runner = CliRunner()
     result = runner.invoke(cli, ["serve", "--help"])
@@ -32,7 +34,7 @@ def test_cli_serve_help():
     assert "Start the license server" in result.output
 
 
-def test_cli_generator_help():
+def test_cli_generator_help() -> None:
     """Test generator command help."""
     runner = CliRunner()
     result = runner.invoke(cli, ["generator", "--help"])

@@ -1,19 +1,20 @@
 import os
 from pathlib import Path
+from typing import Any
 
 from easylic.common.config import Config
 
 
-def test_config_class_attributes():
+def test_config_class_attributes() -> None:
     config = Config()
-    assert config.SESSION_TTL == 30
+    assert config.SESSION_TTL == 30  # noqa: PLR2004
     assert config.MAX_COUNTER == 2**40
-    assert config.MAX_START_ATTEMPTS_PER_MINUTE == 10
+    assert config.MAX_START_ATTEMPTS_PER_MINUTE == 10  # noqa: PLR2004
     assert config.MAX_CIPHERTEXT_LEN == 10 * 1024
-    assert config.MAX_USED_EPH_PUBS_PER_LICENSE == 100
+    assert config.MAX_USED_EPH_PUBS_PER_LICENSE == 100  # noqa: PLR2004
 
 
-def test_config_server_settings():
+def test_config_server_settings() -> None:
     # Test default values
     config = Config()
     assert os.getenv("ADMIN_PASSWORD") == config.ADMIN_PASSWORD
@@ -21,7 +22,7 @@ def test_config_server_settings():
     assert int(os.getenv("SERVER_PORT", "8000")) == config.SERVER_PORT
 
 
-def test_config_paths(monkeypatch):
+def test_config_paths(monkeypatch: Any) -> None:
     """Test config paths with clean environment."""
     # Ensure clean environment for this test
     monkeypatch.delenv("EASYLIC_KEYS_DIR", raising=False)
@@ -30,12 +31,13 @@ def test_config_paths(monkeypatch):
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
 
     # Import Config after env cleanup to get fresh values
-    from importlib import reload
+    from importlib import reload  # noqa: PLC0415
 
-    import easylic.common.config
+    import easylic.common.config  # noqa: PLC0415
 
     reload(easylic.common.config)
-    from easylic.common.config import Config
+
+    from easylic.common.config import Config  # noqa: PLC0415
 
     base_dir = Path(__file__).parent.parent / "easylic"
     expected_keys_dir = base_dir / "server"
@@ -47,7 +49,7 @@ def test_config_paths(monkeypatch):
     )
 
 
-def test_config_required_features():
+def test_config_required_features() -> None:
     config = Config()
     features = config.REQUIRED_FEATURES
     assert features["secure_channel"] is True

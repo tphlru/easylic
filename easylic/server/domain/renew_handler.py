@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-from easylic.common.config import Config
 from easylic.common.crypto import CryptoUtils
 from easylic.common.exceptions import RateLimitError, ValidationError
 from easylic.common.models import (
@@ -25,13 +24,14 @@ from easylic.common.models import (
 )
 
 if TYPE_CHECKING:
+    from easylic.common.config import Config
     from easylic.common.interfaces import ILicenseValidator, ISessionManager
 
 
 class RenewHandler:
     """Handles renew request logic."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         config: Config,
         session_manager: ISessionManager,
@@ -82,7 +82,8 @@ class RenewHandler:
         revoked_licenses = self.license_validator.revoked_licenses
         if license_id in revoked_licenses:
             self.session_manager.remove_session(session_id)
-            raise ValidationError("license revoked")
+            msg = "license revoked"
+            raise ValidationError(msg)
 
         return sess
 
@@ -92,11 +93,13 @@ class RenewHandler:
         """Decrypt ciphertext and validate the inner data."""
         ciphertext = bytes.fromhex(req.ciphertext)
         if len(ciphertext) > self.max_ciphertext_len:
-            raise ValidationError("ciphertext too large")
+            msg = "ciphertext too large"
+            raise ValidationError(msg)
         counter = req.counter
 
         if counter > sess.expected_counter:
-            raise ValidationError("counter too high")
+            msg = "counter too high"
+            raise ValidationError(msg)
 
         nonce = CryptoUtils.get_nonce_prefix_for_epoch(
             sess.initial_nonce_prefix, sess.rekey_epoch
@@ -112,7 +115,8 @@ class RenewHandler:
         try:
             plaintext = aead.decrypt(nonce, ciphertext, aad)
         except Exception as e:
-            raise ValidationError("decrypt failed") from e
+            msg = "decrypt failed"
+            raise ValidationError(msg) from e
 
         data = RenewData.model_validate_json(plaintext.decode())
         self._validate_decrypted_data(data, req, sess, counter)
@@ -129,11 +133,14 @@ class RenewHandler:
     ) -> None:
         """Validate fields in decrypted renew data."""
         if data.session_id != req.session_id:
-            raise ValidationError("session_id mismatch")
+            msg = "session_id mismatch"
+            raise ValidationError(msg)
         if data.version != self.config.PROTOCOL_VERSION:
-            raise ValidationError("protocol version mismatch")
+            msg = "protocol version mismatch"
+            raise ValidationError(msg)
         if data.cipher_suite != self.config.CIPHER_SUITE:
-            raise ValidationError("cipher suite mismatch")
+            msg = "cipher suite mismatch"
+            raise ValidationError(msg)
         if data.counter != counter:
             msg = "counter mismatch"
             raise ValidationError(msg)
@@ -149,14 +156,16 @@ class RenewHandler:
             return False
         if inner_counter == expected_counter - 1:
             return True
-        raise ValidationError("counter mismatch")
+        msg = "counter mismatch"
+        raise ValidationError(msg)
 
     def _check_retry_validity(self, ciphertext: bytes, sess: SessionData) -> None:
         """Check if retry ciphertext matches previous."""
         if not hmac.compare_digest(
             hashlib.sha256(ciphertext).digest(), sess.last_cipher_hash or b""
         ):
-            raise ValidationError("invalid retry")
+            msg = "invalid retry"
+            raise ValidationError(msg)
 
     def _validate_proofs_and_signature(
         self, data: RenewData, sess: SessionData, session_id: str
@@ -169,15 +178,20 @@ class RenewHandler:
                 hashlib.sha256,
             ).hexdigest()
             if data.client_proof != expected_proof:
-                raise ValidationError("client proof mismatch")
+                msg = "client proof mismatch"
+                raise ValidationError(msg)
 
-        msg = f"renew:{session_id}:{data.counter}".encode()
+        message = f"renew:{session_id}:{data.counter}".encode()
         Ed25519PublicKey.from_public_bytes(bytes.fromhex(sess.client_pub)).verify(
-            bytes.fromhex(data.client_sig), msg
+            bytes.fromhex(data.client_sig), message
         )
 
     def _process_counter_and_rekey(
-        self, sess: SessionData, data: RenewData, is_retry: bool, ciphertext: str
+        self,
+        sess: SessionData,
+        data: RenewData,
+        is_retry: bool,  # noqa: FBT001
+        ciphertext: str,
     ) -> None:
         """Process counter increment, rekeying, and session updates."""
         if not is_retry:
@@ -200,7 +214,10 @@ class RenewHandler:
             sess.last_renew_at = int(time.time())
 
     def _build_renew_response(
-        self, sess: SessionData, data: RenewData, is_retry: bool
+        self,
+        sess: SessionData,
+        data: RenewData,
+        is_retry: bool,  # noqa: FBT001
     ) -> RenewResponse:
         """Build the encrypted response for renew."""
         resp_plain = RenewResponseData(

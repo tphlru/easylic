@@ -58,7 +58,10 @@ def keygen(keys_dir: str | None) -> None:
     help="Reset sessions on startup",
 )
 def serve(
-    keys_dir: str | None, host: str | None, port: int | None, reset_sessions: bool
+    keys_dir: str | None,
+    host: str | None,
+    port: int | None,
+    reset_sessions: bool,  # noqa: FBT001
 ) -> None:
     """Start the license server"""
     # Set environment variables before importing server
@@ -72,7 +75,7 @@ def serve(
     # Require ADMIN_PASSWORD
     admin_password = os.getenv("ADMIN_PASSWORD")
     if not admin_password:
-        msg = "ERROR: ADMIN_PASSWORD environment variable must be set to a secure password."
+        msg = "ERROR: ADMIN_PASSWORD env var must be set to a secure password."
         raise click.ClickException(msg)
 
     # Create config with updated env vars

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -8,7 +10,7 @@ from easylic.server.core import LicenseServer
 
 
 @pytest.fixture
-def temp_keys_dir(tmp_path):
+def temp_keys_dir(tmp_path: Path) -> Path:
     """Create temporary keys directory with test keys."""
 
     keys_dir = tmp_path / "keys"
@@ -35,14 +37,14 @@ def temp_keys_dir(tmp_path):
 
 
 @pytest.fixture
-def server(temp_keys_dir):
+def server(temp_keys_dir: Path) -> LicenseServer:
     """Create LicenseServer instance with temp keys."""
     return LicenseServer(
         server_keys_dir=temp_keys_dir, license_file_path=temp_keys_dir / "license.json"
     )
 
 
-def test_server_initialization(temp_keys_dir):
+def test_server_initialization(temp_keys_dir: Path) -> None:
     """Test server initialization."""
     server = LicenseServer(
         server_keys_dir=temp_keys_dir, license_file_path=temp_keys_dir / "license.json"
@@ -53,23 +55,24 @@ def test_server_initialization(temp_keys_dir):
     assert server.max_start_attempts_per_minute == config.MAX_START_ATTEMPTS_PER_MINUTE
 
 
-def test_server_health_endpoint(temp_keys_dir):
+def test_server_health_endpoint(temp_keys_dir: Path) -> None:
     """Test health endpoint."""
     server = LicenseServer(server_keys_dir=temp_keys_dir)
     # Since server uses FastAPI app, we need to test the endpoint
     # This is a placeholder - in real implementation would use TestClient
     assert hasattr(server, "app")
     # Test that app has health route
-    routes = [route.path for route in server.app.routes]
+    routes = [route.path for route in server.app.routes]  # type: ignore[attr-defined]
     assert "/health" in routes
 
 
-def test_server_start_endpoint_missing_features(temp_keys_dir):
+def test_server_start_endpoint_missing_features(temp_keys_dir: Path) -> None:
     """Test /start endpoint with missing required features."""
     server = LicenseServer(server_keys_dir=temp_keys_dir)
     client = TestClient(server.app)
 
-    # Request with missing features - note that server may return 404 if not fully initialized
+    # Request with missing features - note that server may return 404 if not
+    # fully initialized
     response = client.post(
         "/start",
         json={
@@ -87,7 +90,7 @@ def test_server_start_endpoint_missing_features(temp_keys_dir):
     assert response.status_code in [403, 404, 422]
 
 
-def test_server_renew_endpoint_invalid_session(temp_keys_dir):
+def test_server_renew_endpoint_invalid_session(temp_keys_dir: Path) -> None:
     """Test /renew endpoint with invalid session."""
     server = LicenseServer(server_keys_dir=temp_keys_dir)
     client = TestClient(server.app)

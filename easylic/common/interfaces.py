@@ -4,10 +4,12 @@ Interfaces and protocols for dependency injection.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
-from easylic.common.models import LicenseData, SessionData
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from easylic.common.models import LicenseData, SessionData
 
 
 class IDataPersistence(Protocol):

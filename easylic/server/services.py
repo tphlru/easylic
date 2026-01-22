@@ -2,27 +2,31 @@
 Business logic services for the license server.
 """
 
-import logging
+from __future__ import annotations
+
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fastapi.responses import Response
+if TYPE_CHECKING:
+    import logging
 
-from easylic.common.config import Config
-from easylic.common.interfaces import (
-    ILicenseGenerator,
-    ILicenseValidator,
-    ISessionManager,
-)
-from easylic.common.models import (
-    GenerateLicenseRequest,
-    LicenseData,
-    RenewRequest,
-    RenewResponse,
-    RevokeRequest,
-    StartRequest,
-)
-from easylic.server.domain.admin_handler import AdminHandler
+    from fastapi.responses import Response
+
+    from easylic.common.config import Config
+    from easylic.common.interfaces import (
+        ILicenseGenerator,
+        ILicenseValidator,
+        ISessionManager,
+    )
+    from easylic.common.models import (
+        GenerateLicenseRequest,
+        LicenseData,
+        RenewRequest,
+        RenewResponse,
+        RevokeRequest,
+        StartRequest,
+    )
+    from easylic.server.domain.admin_handler import AdminHandler  # noqa: TC004
 from easylic.server.domain.renew_handler import RenewHandler
 from easylic.server.domain.start_handler import StartHandler
 from easylic.server.persistence import DataPersistence
@@ -31,9 +35,9 @@ from easylic.server.persistence import DataPersistence
 class LicenseService:
     """Handles business logic for the license server."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
-        config: "Config",
+        config: Config,
         session_manager: ISessionManager,
         license_validator: ILicenseValidator,
         license_generator: ILicenseGenerator,

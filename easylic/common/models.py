@@ -4,8 +4,10 @@ Pydantic models for request/response validation.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 from pydantic import BaseModel, Field
 

@@ -5,7 +5,6 @@ OOP-based license server using FastAPI.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -15,6 +14,8 @@ from easylic.common.config import Config
 from easylic.common.exceptions import RateLimitError, ValidationError
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
         Ed25519PrivateKey,
         Ed25519PublicKey,
@@ -46,15 +47,15 @@ class LicenseServer(Configurable):
     license_file_path: Path
     revoked_licenses_file_path: Path
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         config: Config | None = None,
-        session_manager=None,
-        license_validator=None,
-        license_generator=None,
-        data_persistence=None,
-        service=None,
-        routes=None,
+        session_manager: Any = None,
+        license_validator: Any = None,
+        license_generator: Any = None,
+        data_persistence: Any = None,
+        service: Any = None,
+        routes: Any = None,
         **overrides: Any,
     ) -> None:
         self.config = config or Config()

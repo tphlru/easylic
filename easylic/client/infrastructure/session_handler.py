@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 class SessionHandlerInfra:
     """Handles session start, renew, and management."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         server_url: str,
         license_data: LicenseData,
@@ -78,7 +78,7 @@ class SessionHandlerInfra:
         self.rekey_epoch: int = 0
         self.aead: ChaCha20Poly1305 | None = None
 
-    def start_session(self) -> str:
+    def start_session(self) -> str:  # noqa: PLR0915
         """Start a secure session with the server."""
         logger.info("Starting session...")
 
@@ -94,29 +94,29 @@ class SessionHandlerInfra:
         try:
             r.raise_for_status()
         except requests.HTTPError:
-            print(f"Server error: {r.text}")
+            logger.exception("Server error: %s", r.text)
             raise
         try:
             resp = StartResponse.model_validate(r.json())
-        except ValidationError as e:
-            print(f"Response validation error: {e}")
+        except ValidationError:
+            logger.exception("Response validation error")
             raise
 
         try:
             # Verify protocol version
             if resp.protocol_version != self.config.PROTOCOL_VERSION:
                 msg = "Protocol version mismatch"
-                raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY301
 
             # Verify cipher suite
             if resp.cipher_suite != self.config.CIPHER_SUITE:
                 msg = "Cipher suite mismatch"
-                raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY301
 
             # Verify required features
             if resp.required_features != self.config.REQUIRED_FEATURES:
                 msg = "Required features mismatch"
-                raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY301
 
             # Verify signature
             signature = bytes.fromhex(resp.signature)
@@ -187,22 +187,23 @@ class SessionHandlerInfra:
                 expected_plaintext = json.dumps(handshake_data, sort_keys=True).encode()
                 if decrypted != expected_plaintext:
                     msg = "Handshake ciphertext verification failed"
-                    raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY301
             except Exception as e:
                 msg = "Handshake decryption or verification failed"
                 raise ValueError(msg) from e
 
-            logger.info("Secure session started: %s", self.session_id)
-            return self.session_id
+            else:
+                logger.info("Secure session started: %s", self.session_id)  # type: ignore[unreachable]
+                return self.session_id
         except Exception as e:
-            print(f"Client error: {type(e).__name__}: {e}")
+            logger.exception("Client error: %s", type(e).__name__)
             raise
 
     def is_license_active(self) -> bool:
         """Check if the license is currently active (session is valid)."""
         return self.session_id is not None and self.initial_nonce_prefix is not None
 
-    def renew_session(self) -> bool:
+    def renew_session(self) -> bool:  # noqa: PLR0915
         """Renew the current session."""
         if not self.session_id:
             logger.error("No active session")
@@ -263,7 +264,9 @@ class SessionHandlerInfra:
             if r.status_code == HTTP_OK:
                 success = True
                 break
-            print(f"Server error on renew attempt {retry_count + 1}: {r.text}")
+            logger.warning(
+                "Server error on renew attempt %d: %s", retry_count + 1, r.text
+            )
             retry_count += 1
             if retry_count < max_retries:
                 time.sleep(backoff)

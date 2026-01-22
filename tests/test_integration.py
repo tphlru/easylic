@@ -1,6 +1,9 @@
 # Integration tests
 import json
+import socket
 import time
+from pathlib import Path
+from typing import Any
 
 import pytest
 import requests
@@ -13,32 +16,31 @@ from easylic.server.core import LicenseServer
 
 
 class MockResponse:
-    def __init__(self, status_code, json_data):
+    def __init__(self, status_code: int, json_data: Any) -> None:
         self.status_code = status_code
         self._json = json_data
 
-    def json(self):
+    def json(self) -> Any:
         return self._json
 
     @property
-    def text(self):
+    def text(self) -> str:
         return str(self._json)
 
-    def raise_for_status(self):
-        if self.status_code >= 400:
-            raise requests.HTTPError(f"{self.status_code} Client Error", response=self)
+    def raise_for_status(self) -> None:
+        if self.status_code >= 400:  # noqa: PLR2004
+            msg = f"{self.status_code} Client Error"
+            raise requests.HTTPError(msg, response=self)  # type: ignore[arg-type]
 
 
 @pytest.fixture
-def temp_setup(tmp_path):
+def temp_setup(tmp_path: Path, monkeypatch: Any) -> Any:
     """Create temporary setup for integration test."""
     # Use separate directory for test keys, not production
-    keys_dir = tmp_path / "test_keys"
-    keys_dir.mkdir(parents=True)
+    test_keys_dir = tmp_path / "test_keys"
+    test_keys_dir.mkdir(parents=True)
 
     license_file = tmp_path / "license.json"
-
-    base_dir = tmp_path  # For backward compatibility
 
     # Generate server keys
     private_key = Ed25519PrivateKey.generate()
@@ -54,8 +56,8 @@ def temp_setup(tmp_path):
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
-    (keys_dir / "server_private.key").write_bytes(private_pem)
-    (keys_dir / "server_public.key").write_bytes(public_pem)
+    (test_keys_dir / "server_private.key").write_bytes(private_pem)
+    (test_keys_dir / "server_public.key").write_bytes(public_pem)
 
     # Create license file
     license_data = {
@@ -116,8 +118,6 @@ def temp_setup(tmp_path):
 
     license_file.write_text(json.dumps(license_data))
 
-    import socket
-
     server_host = "127.0.0.1"
     # Find a free port
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -130,13 +130,13 @@ def temp_setup(tmp_path):
         license_file_path=license_file,
         server_host=server_host,
         server_port=server_port,
-        admin_password="testpassword",
+        admin_password="testpassword",  # noqa: S106
     )
 
     client_app = TestClient(server.app)
 
     # Mock requests.post to use TestClient
-    def mock_post(url, **kwargs):
+    def mock_post(url: str, **kwargs: Any) -> MockResponse:
         # Remove base url
         path = url.replace(f"http://{server_host}:{server_port}", "")
         response = client_app.post(path, **kwargs)

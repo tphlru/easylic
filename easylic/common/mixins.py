@@ -24,7 +24,8 @@ class Configurable:
         """
         Apply overrides to the instance using the config object as defaults.
 
-        Sets self.attr = overrides.get(attr, config_obj.ATTR) for each attr in attr_list.
+        Sets self.attr = overrides.get(attr, config_obj.ATTR) for each attr in
+        attr_list.
 
         Args:
             overrides: Dictionary of override values
