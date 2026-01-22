@@ -187,13 +187,13 @@ class SessionHandlerInfra:
                 expected_plaintext = json.dumps(handshake_data, sort_keys=True).encode()
                 if decrypted != expected_plaintext:
                     msg = "Handshake ciphertext verification failed"
-                raise ValueError(msg)  # noqa: TRY301
+                    raise ValueError(msg)  # noqa: TRY301
             except Exception as e:
                 msg = "Handshake decryption or verification failed"
                 raise ValueError(msg) from e
 
             else:
-                logger.info("Secure session started: %s", self.session_id)  # type: ignore[unreachable]
+                logger.info("Secure session started: %s", self.session_id)
                 return self.session_id
         except Exception as e:
             logger.exception("Client error: %s", type(e).__name__)
@@ -251,6 +251,7 @@ class SessionHandlerInfra:
         max_retries = 3
         backoff = 1
         success = False
+        r = None
         while retry_count < max_retries:
             r = requests.post(
                 f"{self.server_url}/renew",

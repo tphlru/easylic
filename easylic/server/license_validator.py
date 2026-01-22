@@ -9,13 +9,15 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+from easylic.common.models import Policy
+
 if TYPE_CHECKING:
     from pathlib import Path
 
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
     from easylic.common.config import Config
-    from easylic.common.models import LicenseData, Policy  # noqa: TC004
+    from easylic.common.models import LicenseData
 
 from cryptography.exceptions import InvalidSignature
 
