@@ -14,31 +14,24 @@ from cryptography.hazmat.primitives import serialization
 if TYPE_CHECKING:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+from easylic.common import Configurable, setup_logger
 from easylic.common.config import Config
 from easylic.common.models import LicenseData, LicensePayload, Policy
 
 
-class LicenseGenerator:
+class LicenseGenerator(Configurable):
     """License generator for creating signed licenses."""
 
     def __init__(
         self,
-        config: "Config | None" = None,
-        server_priv: "Ed25519PrivateKey | None" = None,
+        config: Config | None = None,
+        server_priv: Ed25519PrivateKey | None = None,
         log_level: int | None = None,
     ):
         self.config = config or Config()
         self.logger = logging.getLogger(__name__)
         self.log_level = log_level if log_level is not None else self.config.LOG_LEVEL
-        self.logger.setLevel(self.log_level)
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            handler.setLevel(self.log_level)
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+        setup_logger(self.logger, self.log_level)
         self.server_priv = server_priv or self._load_private_key()
 
     def _load_private_key(self) -> Ed25519PrivateKey:

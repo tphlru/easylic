@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
 )
 
+from easylic.common import Configurable, setup_logger
 from easylic.common.config import Config
 from easylic.common.models import (
     LicenseData,
@@ -35,7 +36,7 @@ def error_handler(error: Exception) -> None:
     # Custom error handling logic here
 
 
-class LicenseClient:
+class LicenseClient(Configurable):
     """License client for secure session management."""
 
     def __init__(
@@ -113,15 +114,7 @@ class LicenseClient:
 
         # Setup logging
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(self.log_level)
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            handler.setLevel(self.log_level)
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+        setup_logger(self.logger, self.log_level)
 
         # Load server public key
         with (self.server_keys_dir / "server_public.key").open("rb") as key_f:

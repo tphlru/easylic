@@ -5,12 +5,12 @@ OOP-based license server using FastAPI.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
-
-from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 
+from easylic.common import Configurable, setup_logger
 from easylic.common.config import Config
 
 if TYPE_CHECKING:
@@ -27,51 +27,47 @@ from .services import LicenseService
 from .session_manager import SessionManager
 
 
-class LicenseServer:
+class LicenseServer(Configurable):
     """Main license server class handling all operations."""
 
-    def __init__(self, config: "Config | None" = None, **overrides: Any) -> None:
+    # Configuration attributes (set via apply_overrides)
+    rekey_after_renews: int
+    session_ttl: int
+    max_counter: int
+    max_start_attempts_per_minute: int
+    max_ciphertext_len: int
+    max_used_eph_pubs_per_license: int
+    admin_password: str | None
+    server_host: str
+    server_port: int
+    base_dir: Path
+    server_keys_dir: Path
+    license_file_path: Path
+    revoked_licenses_file_path: Path
+
+    def __init__(self, config: Config | None = None, **overrides: Any) -> None:
         self.config = config or Config()
         self.logger = logging.getLogger(__name__)
         self.log_level = overrides.get("log_level", self.config.LOG_LEVEL)
-        self.logger.setLevel(self.log_level)
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            handler.setLevel(self.log_level)
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-        self.rekey_after_renews = overrides.get(
-            "rekey_after_renews", self.config.REKEY_AFTER_RENEWS_DEFAULT
-        )
-        self.session_ttl = overrides.get("session_ttl", self.config.SESSION_TTL)
-        self.max_counter = overrides.get("max_counter", self.config.MAX_COUNTER)
-        self.max_start_attempts_per_minute = overrides.get(
-            "max_start_attempts_per_minute", self.config.MAX_START_ATTEMPTS_PER_MINUTE
-        )
-        self.max_ciphertext_len = overrides.get(
-            "max_ciphertext_len", self.config.MAX_CIPHERTEXT_LEN
-        )
-        self.max_used_eph_pubs_per_license = overrides.get(
-            "max_used_eph_pubs_per_license", self.config.MAX_USED_EPH_PUBS_PER_LICENSE
-        )
-        self.admin_password = overrides.get(
-            "admin_password", self.config.ADMIN_PASSWORD
-        )
-        self.server_host = overrides.get("server_host", self.config.SERVER_HOST)
-        self.server_port = overrides.get("server_port", self.config.SERVER_PORT)
-        self.base_dir = overrides.get("base_dir", self.config.BASE_DIR)
-        self.server_keys_dir = overrides.get(
-            "server_keys_dir", self.config.SERVER_KEYS_DIR
-        )
-        self.license_file_path = overrides.get(
-            "license_file_path", self.config.LICENSE_FILE_PATH
-        )
-        self.revoked_licenses_file_path = overrides.get(
-            "revoked_licenses_file_path", self.config.REVOKED_LICENSES_FILE_PATH
-        )
+        setup_logger(self.logger, self.log_level)
+
+        # Apply configuration overrides
+        attr_list = [
+            "rekey_after_renews",
+            "session_ttl",
+            "max_counter",
+            "max_start_attempts_per_minute",
+            "max_ciphertext_len",
+            "max_used_eph_pubs_per_license",
+            "admin_password",
+            "server_host",
+            "server_port",
+            "base_dir",
+            "server_keys_dir",
+            "license_file_path",
+            "revoked_licenses_file_path",
+        ]
+        self.apply_overrides(overrides, self.config, attr_list)
         self.app = FastAPI()
         server_priv = overrides.get("server_priv")
         if server_priv is None:
