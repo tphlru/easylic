@@ -16,9 +16,9 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-from fastapi import HTTPException
 
 from easylic.common.config import Config
+from easylic.common.exceptions import RateLimitError, ValidationError
 from easylic.common.crypto import CryptoUtils
 from easylic.common.models import (
     LicenseData,
@@ -80,10 +80,10 @@ class StartService:
     def _validate_start_request(self, req: StartRequest) -> None:
         """Validate protocol version and required features."""
         if req.version != self.config.PROTOCOL_VERSION:
-            raise HTTPException(403, "protocol version mismatch")
+            raise ValidationError("protocol version mismatch")
         for feature, required in self.config.REQUIRED_FEATURES.items():
             if req.supported_features.get(feature) != required:
-                raise HTTPException(403, f"required feature not supported: {feature}")
+                raise ValidationError(f"required feature not supported: {feature}")
 
     def _extract_start_data(
         self, req: StartRequest
@@ -105,11 +105,11 @@ class StartService:
         )
         license_id = lic.payload.license_id
         if self.session_manager.is_eph_pub_used(license_id, pub_bytes):
-            raise HTTPException(403, "handshake replay detected")
+            raise ValidationError("handshake replay detected")
         self.session_manager.record_used_eph_pub(license_id, pub_bytes)
 
         if not self.license_validator.verify_license(lic):
-            raise HTTPException(403, "invalid license")
+            raise ValidationError("invalid license")
         return license_id
 
     def _validate_license_and_policy(self, lic: LicenseData) -> dict:
@@ -118,11 +118,11 @@ class StartService:
         if not self.session_manager.check_start_attempt_rate(
             license_id, self.max_start_attempts_per_minute
         ):
-            raise HTTPException(429, "too many start attempts")
+            raise RateLimitError("too many start attempts")
 
         policy = lic.payload.policy
         if not self.license_validator.validate_policy(policy):
-            raise HTTPException(403, "invalid policy")
+            raise ValidationError("invalid policy")
         return policy
 
     def _enforce_session_limits(self, license_id: str, policy: dict) -> None:
@@ -130,7 +130,7 @@ class StartService:
         max_sessions = policy["max_sessions"]
         active_sessions = self.session_manager.get_active_sessions_count(license_id)
         if active_sessions >= max_sessions:
-            raise HTTPException(403, "max_sessions exceeded")
+            raise ValidationError("max_sessions exceeded")
 
     def _generate_keys_and_session(
         self,

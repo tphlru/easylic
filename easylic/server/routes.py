@@ -6,10 +6,8 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-
-from easylic.common.exceptions import ValidationError
 
 from easylic.common.models import (
     GenerateLicenseRequest,
@@ -52,33 +50,21 @@ class LicenseRoutes:
 
     async def start(self, req: StartRequest) -> dict:
         """Handle /start endpoint."""
-        try:
-            return await self.service.start(req)
-        except ValidationError as e:
-            raise HTTPException(e.status_code, str(e))
+        return await self.service.start(req)
 
     async def renew(self, req: RenewRequest) -> Any:
         """Handle /renew endpoint."""
-        try:
-            return await self.service.renew(req)
-        except ValidationError as e:
-            raise HTTPException(e.status_code, str(e))
+        return await self.service.renew(req)
 
     async def revoke(self, req: RevokeRequest, admin_password: str | None) -> dict:
         """Handle /revoke endpoint."""
-        try:
-            return await self.service.revoke(req, admin_password)
-        except ValidationError as e:
-            raise HTTPException(e.status_code, str(e))
+        return await self.service.revoke(req, admin_password)
 
     async def generate_license_endpoint(
         self, req: GenerateLicenseRequest, admin_password: str | None
     ) -> Any:
         """Handle /generate_license endpoint."""
-        try:
-            return await self.service.generate_license_endpoint(req, admin_password)
-        except ValidationError as e:
-            raise HTTPException(e.status_code, str(e))
+        return await self.service.generate_license_endpoint(req, admin_password)
 
     async def admin_page(self) -> HTMLResponse:
         """Handle /admin endpoint."""

@@ -8,10 +8,11 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 
 from easylic.common import Configurable, setup_logger
 from easylic.common.config import Config
+from easylic.common.exceptions import RateLimitError, ValidationError
 
 if TYPE_CHECKING:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import (
@@ -69,6 +70,20 @@ class LicenseServer(Configurable):
         ]
         self.apply_overrides(overrides, self.config, attr_list)
         self.app = FastAPI()
+
+        # Add global exception handlers
+        @self.app.exception_handler(ValidationError)
+        async def validation_error_handler(
+            _request: Request, exc: ValidationError
+        ) -> None:
+            raise HTTPException(status_code=exc.status_code, detail=str(exc))
+
+        @self.app.exception_handler(RateLimitError)
+        async def rate_limit_error_handler(
+            _request: Request, exc: RateLimitError
+        ) -> None:
+            raise HTTPException(status_code=exc.status_code, detail=str(exc))
+
         server_priv = overrides.get("server_priv")
         if server_priv is None:
             self.server_pub, self.server_priv = self._get_server_keys()
