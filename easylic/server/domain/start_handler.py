@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from easylic.common.config import Config
@@ -49,10 +50,9 @@ class StartHandler:
         self.logger = logging.getLogger(__name__)
 
     def handle_start(self, req: StartRequest) -> dict[str, Any]:
-        """Handle start request."""
-        self._validate_start_request(req)
+        """Handle start session request."""
         self.session_manager.clean_expired_sessions()
-
+        self._validate_start_request(req)
         lic, client_pub_hex, client_eph_pub = self._extract_start_data(req)
         license_id = self._perform_anti_replay_and_verify(lic, client_eph_pub)
         policy = self._validate_license_and_policy(lic)
@@ -65,7 +65,7 @@ class StartHandler:
             session_data["session_id"], session_data["session"]
         )
 
-        return self._build_start_response(session_data)
+        return self._build_start_response(session_data, resp_data)
 
     def _validate_start_request(self, req: StartRequest) -> None:
         """Validate protocol version and required features."""
@@ -175,6 +175,15 @@ class StartHandler:
             transcript_hash.encode()
         ).hex()
 
+        # Encrypt handshake data
+        aead = ChaCha20Poly1305(session_key)
+        aad = b"handshake"
+        plaintext = json.dumps(handshake_data, sort_keys=True).encode()
+        nonce = os.urandom(12)
+        ciphertext = aead.encrypt(nonce, plaintext, aad)
+        handshake_data["ciphertext"] = ciphertext.hex()
+        handshake_data["nonce"] = nonce.hex()
+
         session = SessionData(
             license_id=lic.payload.license_id,
             expires_at=expires,
@@ -198,9 +207,10 @@ class StartHandler:
             "transcript_hash_signature": transcript_hash_signature,
         }, handshake_data
 
-    def _build_start_response(self, session_data: dict[str, Any]) -> dict[str, Any]:
+    def _build_start_response(
+        self, session_data: dict[str, Any], resp_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Build the response dict for start endpoint."""
-        sess = session_data["session"]
         server_eph_pub = session_data["server_eph_pub"]
         resp = {
             "session_id": session_data["session_id"],
@@ -215,6 +225,8 @@ class StartHandler:
             "nonce_prefix": session_data["nonce_prefix"].hex(),
             "transcript_hash": session_data["transcript_hash"],
             "transcript_hash_signature": session_data["transcript_hash_signature"],
+            "handshake_ciphertext": resp_data["ciphertext"],
+            "handshake_nonce": resp_data["nonce"],
         }
         resp["signature"] = self.license_generator.sign(resp)
         return resp

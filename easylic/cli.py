@@ -52,7 +52,14 @@ def keygen(keys_dir: str | None) -> None:
     type=int,
     help="Port to bind server to (default: from SERVER_PORT env or 8000)",
 )
-def serve(keys_dir: str | None, host: str | None, port: int | None) -> None:
+@click.option(
+    "--reset-sessions",
+    is_flag=True,
+    help="Reset sessions on startup",
+)
+def serve(
+    keys_dir: str | None, host: str | None, port: int | None, reset_sessions: bool
+) -> None:
     """Start the license server"""
     # Set environment variables before importing server
     if keys_dir:
@@ -70,6 +77,12 @@ def serve(keys_dir: str | None, host: str | None, port: int | None) -> None:
 
     # Create config with updated env vars
     config = Config()
+
+    if reset_sessions:
+        sessions_file = config.DATA_DIR / "sessions.json"
+        if sessions_file.exists():
+            sessions_file.unlink()
+            click.echo("Sessions reset")
 
     start_server(config)
 

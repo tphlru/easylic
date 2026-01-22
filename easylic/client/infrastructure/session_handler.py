@@ -177,6 +177,21 @@ class SessionHandlerInfra:
             )
             self.aead = ChaCha20Poly1305(self.session_key)
 
+            # Verify handshake ciphertext
+            try:
+                handshake_nonce = bytes.fromhex(resp.handshake_nonce)
+                handshake_ciphertext = bytes.fromhex(resp.handshake_ciphertext)
+                decrypted = self.aead.decrypt(
+                    handshake_nonce, handshake_ciphertext, b"handshake"
+                )
+                expected_plaintext = json.dumps(handshake_data, sort_keys=True).encode()
+                if decrypted != expected_plaintext:
+                    msg = "Handshake ciphertext verification failed"
+                    raise ValueError(msg)
+            except Exception as e:
+                msg = "Handshake decryption or verification failed"
+                raise ValueError(msg) from e
+
             logger.info("Secure session started: %s", self.session_id)
             return self.session_id
         except Exception as e:

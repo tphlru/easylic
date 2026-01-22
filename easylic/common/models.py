@@ -42,6 +42,8 @@ class StartResponse(BaseModel):
     signature: str
     transcript_hash: str
     transcript_hash_signature: str
+    handshake_ciphertext: str
+    handshake_nonce: str
 
 
 class RenewRequest(BaseModel):

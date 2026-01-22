@@ -6,9 +6,12 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from easylic.common.models import SessionData
 from easylic.server.persistence import DataPersistence
+
+if TYPE_CHECKING:
+    from easylic.common.models import SessionData
 
 START_ATTEMPT_TTL = 60
 USED_EPH_PUB_TTL = 60
@@ -29,11 +32,13 @@ class SessionManager:
         self.start_attempts: dict[str, list[int]] = {}
         self.used_client_eph_pubs: dict[str, dict[bytes, int]] = {}
         self.sessions_file_path = sessions_file_path or Path("data/sessions.json")
+        self.clean_expired_sessions()
 
     def clean_expired_sessions(self) -> None:
         """Clean expired sessions and related data."""
         now = int(time.time())
         expired = [sid for sid, sess in self.sessions.items() if sess.expires_at < now]
+        sessions_changed = len(expired) > 0
         for sid in expired:
             self.sessions.pop(sid, None)
 
@@ -63,6 +68,10 @@ class SessionManager:
                 )
             if not self.used_client_eph_pubs[lid]:
                 del self.used_client_eph_pubs[lid]
+
+        # Save changes if sessions were removed
+        if sessions_changed:
+            self._save_sessions()
 
     def get_active_sessions_count(self, license_id: str) -> int:
         """Get number of active sessions for a license."""
