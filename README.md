@@ -108,6 +108,8 @@ easylic generator
 
 Or via API: See [API Reference](#api-reference) for the POST /generate_license endpoint.
 
+**Note:** The generated license is a JSON file that should be distributed to clients apps.
+
 ## Installation
 
 ### Prerequisites
