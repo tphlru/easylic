@@ -15,9 +15,7 @@ from easylic.common.models import (
     RevokeRequest,
     StartRequest,
 )
-
-
-from .services import LicenseService
+from easylic.server.services import LicenseService
 
 
 class LicenseRoutes:

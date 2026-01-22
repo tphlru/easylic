@@ -17,9 +17,9 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
-from pydantic import ValidationError
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from pydantic import ValidationError
 
 from easylic.common.config import Config
 from easylic.common.crypto import CryptoUtils
@@ -40,20 +40,7 @@ if TYPE_CHECKING:
         Ed25519PrivateKey,
         Ed25519PublicKey,
     )
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-from easylic.common.config import Config
-from easylic.common.crypto import CryptoUtils
-from easylic.common.models import (
-    LicenseData,
-    RenewData,
-    RenewRequest,
-    RenewResponse,
-    RenewResponseData,
-    StartRequest,
-    StartResponse,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +57,7 @@ class SessionHandlerInfra:
         client_eph_priv: X25519PrivateKey,
         client_eph_pub_hex: str,
         server_pub: Ed25519PublicKey,
-        config: "Config | None" = None,
+        config: Config | None = None,
     ):
         self.server_url = server_url
         self.license_data = license_data
@@ -168,6 +155,16 @@ class SessionHandlerInfra:
                 json.dumps(handshake_data, sort_keys=True).encode()
             ).hexdigest()
 
+            # Verify transcript hash signature from server
+            try:
+                self.server_pub.verify(
+                    bytes.fromhex(resp.transcript_hash_signature),
+                    self.transcript_hash.encode(),
+                )
+            except Exception as e:
+                msg = "Transcript hash signature verification failed"
+                raise ValueError(msg) from e
+
             effective_prefix = CryptoUtils.get_nonce_prefix_for_epoch(
                 self.initial_nonce_prefix, 0
             )
@@ -211,6 +208,7 @@ class SessionHandlerInfra:
             client_sig=client_sig,
             version=self.config.PROTOCOL_VERSION,
             cipher_suite=self.config.CIPHER_SUITE,
+            transcript_hash=self.transcript_hash,
         )
         if self.counter == 0:
             renew_data.client_proof = hmac.new(
@@ -250,8 +248,7 @@ class SessionHandlerInfra:
             if r.status_code == HTTP_OK:
                 success = True
                 break
-            else:
-                print(f"Server error on renew attempt {retry_count + 1}: {r.text}")
+            print(f"Server error on renew attempt {retry_count + 1}: {r.text}")
             retry_count += 1
             if retry_count < max_retries:
                 time.sleep(backoff)

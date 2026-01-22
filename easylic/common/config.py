@@ -40,8 +40,8 @@ class Config:
         )
 
         # Renew and rekey settings (defaults, can be overridden in class constructors)
-        self.RENEW_INTERVAL_DEFAULT: int = 10  # Seconds between renew requests
-        self.REKEY_AFTER_RENEWS_DEFAULT: int = 10  # Number of renews before rekeying
+        self.RENEW_INTERVAL: int = 10  # Seconds between renew requests
+        self.REKEY_AFTER_RENEWS: int = 10  # Number of renews before rekeying
         self.RENEW_RATE_LIMIT: float = 0.1  # Minimum seconds between renews
 
         # Required security features that clients must support

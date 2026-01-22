@@ -70,19 +70,3 @@ def test_client_initialization(client):
 def test_client_is_license_active_no_session(client):
     """Test license active check without active session."""
     assert not client.is_license_active()
-
-
-def test_client_start_session_placeholder(client):
-    """Placeholder for start_session test - full mocking is complex."""
-    # Test that client has required attributes
-    assert hasattr(client, "start_session")
-    assert hasattr(client, "server_url")
-    assert client.server_url == "http://localhost:8080"
-
-
-def test_client_renew_session_placeholder(client):
-    """Placeholder for renew_session test - requires complex session state setup."""
-    # Test that client has required attributes
-    assert hasattr(client, "renew_session")
-    assert hasattr(client, "counter")
-    assert client.counter == 0

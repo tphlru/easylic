@@ -28,10 +28,10 @@ class AdminHandler:
 
     def __init__(
         self,
-        license_validator: "ILicenseValidator",
-        license_generator: "ILicenseGenerator",
-        session_manager: "ISessionManager",
-        data_persistence: "IDataPersistence",
+        license_validator: ILicenseValidator,
+        license_generator: ILicenseGenerator,
+        session_manager: ISessionManager,
+        data_persistence: IDataPersistence,
     ):
         self.license_validator = license_validator
         self.license_generator = license_generator
@@ -45,7 +45,6 @@ class AdminHandler:
             raise ValidationError("Invalid admin password")
 
         license_id = payload["license_id"]
-        import time
 
         now = int(time.time())
 

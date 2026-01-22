@@ -34,8 +34,8 @@ class RenewHandler:
     def __init__(
         self,
         config: Config,
-        session_manager: "ISessionManager",
-        license_validator: "ILicenseValidator",
+        session_manager: ISessionManager,
+        license_validator: ILicenseValidator,
         rekey_after_renews: int,
         session_ttl: int,
         max_counter: int,
@@ -66,14 +66,17 @@ class RenewHandler:
 
         if not sess or sess.expires_at < now:
             self.session_manager.remove_session(session_id)
-            raise ValidationError("session expired")
+            msg = "session expired"
+            raise ValidationError(msg)
 
         if now - sess.last_renew_at < self.config.RENEW_RATE_LIMIT:
-            raise RateLimitError("too many renews")
+            msg = "too many renews"
+            raise RateLimitError(msg)
 
         if sess.expected_counter >= self.max_counter:
             self.session_manager.remove_session(session_id)
-            raise ValidationError("session counter overflow")
+            msg = "session counter overflow"
+            raise ValidationError(msg)
 
         license_id = sess.license_id
         revoked_licenses = self.license_validator.revoked_licenses
@@ -132,7 +135,11 @@ class RenewHandler:
         if data.cipher_suite != self.config.CIPHER_SUITE:
             raise ValidationError("cipher suite mismatch")
         if data.counter != counter:
-            raise ValidationError("counter mismatch")
+            msg = "counter mismatch"
+            raise ValidationError(msg)
+        if data.transcript_hash != sess.transcript_hash:
+            msg = "transcript hash mismatch"
+            raise ValidationError(msg)
 
     def _determine_retry_status(
         self, inner_counter: int, expected_counter: int
@@ -140,10 +147,9 @@ class RenewHandler:
         """Determine if this is a retry request."""
         if inner_counter == expected_counter:
             return False
-        elif inner_counter == expected_counter - 1:
+        if inner_counter == expected_counter - 1:
             return True
-        else:
-            raise ValidationError("counter mismatch")
+        raise ValidationError("counter mismatch")
 
     def _check_retry_validity(self, ciphertext: bytes, sess: SessionData) -> None:
         """Check if retry ciphertext matches previous."""

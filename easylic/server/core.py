@@ -20,12 +20,12 @@ if TYPE_CHECKING:
         Ed25519PublicKey,
     )
 
-from .license_generator import LicenseGenerator
-from .license_validator import LicenseValidator
-from .persistence import DataPersistence
-from .routes import LicenseRoutes
-from .services import LicenseService
-from .session_manager import SessionManager
+from easylic.server.license_generator import LicenseGenerator
+from easylic.server.license_validator import LicenseValidator
+from easylic.server.persistence import DataPersistence
+from easylic.server.routes import LicenseRoutes
+from easylic.server.services import LicenseService
+from easylic.server.session_manager import SessionManager
 
 
 class LicenseServer(Configurable):
@@ -46,7 +46,17 @@ class LicenseServer(Configurable):
     license_file_path: Path
     revoked_licenses_file_path: Path
 
-    def __init__(self, config: Config | None = None, **overrides: Any) -> None:
+    def __init__(
+        self,
+        config: Config | None = None,
+        session_manager=None,
+        license_validator=None,
+        license_generator=None,
+        data_persistence=None,
+        service=None,
+        routes=None,
+        **overrides: Any,
+    ) -> None:
         self.config = config or Config()
         self.logger = logging.getLogger(__name__)
         self.log_level = overrides.get("log_level", self.config.LOG_LEVEL)
@@ -91,26 +101,37 @@ class LicenseServer(Configurable):
             self.server_priv = server_priv
             self.server_pub = self.server_priv.public_key()
 
-        # Initialize components
+        # Initialize components with dependency injection
         self.revoked_licenses: dict[str, int] = DataPersistence.load_revoked_licenses(
             self.revoked_licenses_file_path
         )
-        self.session_manager = overrides.get("session_manager") or SessionManager(
-            self.max_used_eph_pubs_per_license, self.config.DATA_DIR / "sessions.json"
+        self.session_manager = (
+            session_manager
+            or overrides.get("session_manager")
+            or SessionManager(
+                self.max_used_eph_pubs_per_license,
+                self.config.DATA_DIR / "sessions.json",
+            )
         )
-        self.license_validator = overrides.get("license_validator") or LicenseValidator(
-            self.config,
-            self.server_pub,
-            self.revoked_licenses,
-            self.revoked_licenses_file_path,
+        self.license_validator = (
+            license_validator
+            or overrides.get("license_validator")
+            or LicenseValidator(
+                self.config,
+                self.server_pub,
+                self.revoked_licenses,
+                self.revoked_licenses_file_path,
+            )
         )
-        self.license_generator = overrides.get("license_generator") or LicenseGenerator(
-            self.config, self.server_priv
+        self.license_generator = (
+            license_generator
+            or overrides.get("license_generator")
+            or LicenseGenerator(self.config, self.server_priv)
         )
-        self.data_persistence = DataPersistence()
+        self.data_persistence = data_persistence or DataPersistence()
 
         # Initialize service and routes
-        self.service = LicenseService(
+        self.service = service or LicenseService(
             config=self.config,
             session_manager=self.session_manager,
             license_validator=self.license_validator,
@@ -122,7 +143,7 @@ class LicenseServer(Configurable):
             max_ciphertext_len=self.max_ciphertext_len,
             logger=self.logger,
         )
-        self.routes = LicenseRoutes(self.service, self.admin_password)
+        self.routes = routes or LicenseRoutes(self.service, self.admin_password)
         self.routes.setup_routes(self.app)
 
         # Log required client configuration

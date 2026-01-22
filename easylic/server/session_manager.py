@@ -8,9 +8,7 @@ import time
 from pathlib import Path
 
 from easylic.common.models import SessionData
-
-from .persistence import DataPersistence
-
+from easylic.server.persistence import DataPersistence
 
 START_ATTEMPT_TTL = 60
 USED_EPH_PUB_TTL = 60

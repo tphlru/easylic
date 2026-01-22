@@ -24,7 +24,7 @@ class LicenseValidator:
 
     def __init__(
         self,
-        config: "Config",
+        config: Config,
         server_pub: Ed25519PublicKey,
         revoked_licenses: dict[str, int],
         revoked_licenses_file_path: Path,

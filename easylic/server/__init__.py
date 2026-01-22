@@ -3,10 +3,11 @@ Entry point for the license server.
 """
 
 import logging
+
 import uvicorn
 
 from easylic.common.config import Config
-from .core import LicenseServer
+from easylic.server.core import LicenseServer
 
 
 def start_server(config: Config | None = None) -> None:

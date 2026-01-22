@@ -104,13 +104,3 @@ def test_server_renew_endpoint_invalid_session(temp_keys_dir):
 
     # Should return 404 or error
     assert response.status_code in [400, 403, 404]
-
-
-def test_server_start_endpoint_invalid_features(server):
-    """Test /start endpoint with missing required features."""
-    # Placeholder - would need to mock the app
-
-
-def test_server_renew_endpoint_invalid_counter(server):
-    """Test /renew endpoint with invalid counter."""
-    # Placeholder

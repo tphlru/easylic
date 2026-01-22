@@ -56,7 +56,7 @@ class ConfigLoader(Configurable):
         self.renew_interval: int = (
             client_config.renew_interval
             if client_config.renew_interval is not None
-            else self.config.RENEW_INTERVAL_DEFAULT
+            else self.config.RENEW_INTERVAL
         )
         self.session_ttl = (
             client_config.session_ttl
@@ -90,14 +90,22 @@ class ConfigLoader(Configurable):
 
     def load_server_public_key(self) -> Ed25519PublicKey:
         """Load the server public key from file."""
-        with (self.server_keys_dir / "server_public.key").open("rb") as key_f:
+        key_path = self.server_keys_dir / "server_public.key"
+        if not key_path.exists():
+            msg = f"Server public key file not found: {key_path}"
+            raise FileNotFoundError(msg)
+        with key_path.open("rb") as key_f:
             return cast(
                 "Ed25519PublicKey", serialization.load_pem_public_key(key_f.read())
             )
 
     def load_license(self) -> LicenseData:
         """Load the license data from file."""
-        with Path(self.license_file).open() as lic_f:
+        license_path = Path(self.license_file)
+        if not license_path.exists():
+            msg = f"License file not found: {license_path}"
+            raise FileNotFoundError(msg)
+        with license_path.open() as lic_f:
             return LicenseData.model_validate_json(lic_f.read())
 
     def generate_client_keys(

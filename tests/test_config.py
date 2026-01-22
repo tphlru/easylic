@@ -16,9 +16,9 @@ def test_config_class_attributes():
 def test_config_server_settings():
     # Test default values
     config = Config()
-    assert config.ADMIN_PASSWORD == os.getenv("ADMIN_PASSWORD")
-    assert config.SERVER_HOST == os.getenv("SERVER_HOST", "127.0.0.1")
-    assert config.SERVER_PORT == int(os.getenv("SERVER_PORT", "8000"))
+    assert os.getenv("ADMIN_PASSWORD") == config.ADMIN_PASSWORD
+    assert os.getenv("SERVER_HOST", "127.0.0.1") == config.SERVER_HOST
+    assert int(os.getenv("SERVER_PORT", "8000")) == config.SERVER_PORT
 
 
 def test_config_paths(monkeypatch):

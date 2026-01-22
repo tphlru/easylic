@@ -9,10 +9,9 @@ import os
 import click
 
 from easylic.common.config import Config
-
-from .server import start_server
-from .server.keygen import KeyGenerator
-from .server.license_generator import LicenseGenerator
+from easylic.server import start_server
+from easylic.server.keygen import KeyGenerator
+from easylic.server.license_generator import LicenseGenerator
 
 
 @click.group()

@@ -1,2 +1,2 @@
 # Client module
-from .client import LicenseClient
+from easylic.client.client import LicenseClient

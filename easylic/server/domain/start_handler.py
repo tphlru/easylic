@@ -34,8 +34,8 @@ class StartHandler:
     def __init__(
         self,
         config: Config,
-        session_manager: "ISessionManager",
-        license_validator: "ILicenseValidator",
+        session_manager: ISessionManager,
+        license_validator: ILicenseValidator,
         license_generator: Any,
         max_start_attempts_per_minute: int,
         session_ttl: int,
@@ -70,10 +70,12 @@ class StartHandler:
     def _validate_start_request(self, req: StartRequest) -> None:
         """Validate protocol version and required features."""
         if req.version != self.config.PROTOCOL_VERSION:
-            raise ValidationError("protocol version mismatch")
+            msg = "protocol version mismatch"
+            raise ValidationError(msg)
         for feature, required in self.config.REQUIRED_FEATURES.items():
             if req.supported_features.get(feature) != required:
-                raise ValidationError(f"required feature not supported: {feature}")
+                msg = f"required feature not supported: {feature}"
+                raise ValidationError(msg)
 
     def _extract_start_data(
         self, req: StartRequest
@@ -95,11 +97,13 @@ class StartHandler:
         )
         license_id = lic.payload.license_id
         if self.session_manager.is_eph_pub_used(license_id, pub_bytes):
-            raise ValidationError("handshake replay detected")
+            msg = "handshake replay detected"
+            raise ValidationError(msg)
         self.session_manager.record_used_eph_pub(license_id, pub_bytes)
 
         if not self.license_validator.verify_license(lic):
-            raise ValidationError("invalid license")
+            msg = "invalid license"
+            raise ValidationError(msg)
         return license_id
 
     def _validate_license_and_policy(self, lic: LicenseData) -> dict[str, Any]:
@@ -108,11 +112,13 @@ class StartHandler:
         if not self.session_manager.check_start_attempt_rate(
             license_id, self.max_start_attempts_per_minute
         ):
-            raise RateLimitError("too many start attempts")
+            msg = "too many start attempts"
+            raise RateLimitError(msg)
 
         policy = lic.payload.policy
         if not self.license_validator.validate_policy(policy):
-            raise ValidationError("invalid policy")
+            msg = "invalid policy"
+            raise ValidationError(msg)
         return policy
 
     def _enforce_session_limits(self, license_id: str, policy: dict[str, Any]) -> None:
@@ -120,7 +126,8 @@ class StartHandler:
         max_sessions = policy["max_sessions"]
         active_sessions = self.session_manager.get_active_sessions_count(license_id)
         if active_sessions >= max_sessions:
-            raise ValidationError("max_sessions exceeded")
+            msg = "max_sessions exceeded"
+            raise ValidationError(msg)
 
     def _generate_keys_and_session(
         self,
@@ -164,6 +171,10 @@ class StartHandler:
             json.dumps(handshake_data, sort_keys=True).encode()
         ).hexdigest()
 
+        transcript_hash_signature = self.license_generator.server_priv.sign(
+            transcript_hash.encode()
+        ).hex()
+
         session = SessionData(
             license_id=lic.payload.license_id,
             expires_at=expires,
@@ -183,6 +194,8 @@ class StartHandler:
             "server_eph_pub": server_eph_pub,
             "nonce_prefix": nonce_prefix,
             "expires": expires,
+            "transcript_hash": transcript_hash,
+            "transcript_hash_signature": transcript_hash_signature,
         }, handshake_data
 
     def _build_start_response(self, session_data: dict[str, Any]) -> dict[str, Any]:
@@ -199,7 +212,9 @@ class StartHandler:
                 serialization.Encoding.Raw,
                 serialization.PublicFormat.Raw,
             ).hex(),
-            "nonce_prefix": sess.initial_nonce_prefix.hex(),
+            "nonce_prefix": session_data["nonce_prefix"].hex(),
+            "transcript_hash": session_data["transcript_hash"],
+            "transcript_hash_signature": session_data["transcript_hash_signature"],
         }
         resp["signature"] = self.license_generator.sign(resp)
         return resp

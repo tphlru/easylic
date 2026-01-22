@@ -5,7 +5,6 @@ OOP-based license client - Presentation layer.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
 
 from easylic.client.application.runner import Runner
 from easylic.client.application.session_manager import SessionManager

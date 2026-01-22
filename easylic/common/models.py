@@ -40,6 +40,8 @@ class StartResponse(BaseModel):
     server_eph_pub: str
     nonce_prefix: str
     signature: str
+    transcript_hash: str
+    transcript_hash_signature: str
 
 
 class RenewRequest(BaseModel):
@@ -61,6 +63,7 @@ class RenewData(BaseModel):
     version: int
     cipher_suite: str
     client_proof: str | None = None
+    transcript_hash: str
 
 
 class RenewResponseData(BaseModel):
