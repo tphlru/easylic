@@ -5,6 +5,7 @@ License validation utilities.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -32,26 +33,41 @@ class LicenseValidator:
         self.server_pub = server_pub
         self.revoked_licenses = revoked_licenses
         self.revoked_licenses_file_path = revoked_licenses_file_path
+        self.logger = logging.getLogger(__name__)
 
     def verify_license(self, lic: LicenseData) -> bool:
         """Verify license signature and validity."""
         payload = lic.payload
+        license_id = payload.license_id
+        self.logger.debug(f"Verifying license {license_id}")
+
         sig = bytes.fromhex(lic.signature)
         data = json.dumps(
             payload.model_dump(), sort_keys=True, separators=(",", ":")
         ).encode()
         try:
             self.server_pub.verify(sig, data)
+            self.logger.debug(f"License {license_id} signature valid")
         except InvalidSignature:
+            self.logger.info(f"License {license_id} signature invalid")
             return False
+
         now = int(time.time())
+        self.logger.debug(
+            f"License {license_id} times: valid_from={payload.valid_from}, valid_until={payload.valid_until}, now={now}"
+        )
 
         # Check if license is revoked
-        license_id = payload.license_id
         if license_id in self.revoked_licenses:
+            self.logger.info(f"License {license_id} revoked")
             return False  # Revoked licenses are permanently invalid
 
-        return payload.valid_from <= now <= payload.valid_until
+        if not (payload.valid_from <= now <= payload.valid_until):
+            self.logger.info(f"License {license_id} expired or not yet valid")
+            return False
+
+        self.logger.debug(f"License {license_id} valid")
+        return True
 
     def validate_policy(self, policy: dict) -> bool:
         """Server-side validation for policy."""

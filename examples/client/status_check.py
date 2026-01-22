@@ -29,7 +29,7 @@ def main():
         print(f"Session started: {session_id}")
 
         # Now check the license status multiple times
-        for i in range(5):
+        for i in range(50):
             is_active = client.is_license_active()
             print(f"License status check {i + 1}: Active = {is_active}")
 

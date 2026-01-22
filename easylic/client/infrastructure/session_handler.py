@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
+from pydantic import ValidationError
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
@@ -103,74 +104,87 @@ class SessionHandlerInfra:
         )
 
         r = requests.post(f"{self.server_url}/start", json=req.model_dump(), timeout=10)
-        r.raise_for_status()
-        resp = StartResponse.model_validate(r.json())
+        try:
+            r.raise_for_status()
+        except requests.HTTPError:
+            print(f"Server error: {r.text}")
+            raise
+        try:
+            resp = StartResponse.model_validate(r.json())
+        except ValidationError as e:
+            print(f"Response validation error: {e}")
+            raise
 
-        # Verify protocol version
-        if resp.protocol_version != self.config.PROTOCOL_VERSION:
-            msg = "Protocol version mismatch"
-            raise ValueError(msg)
+        try:
+            # Verify protocol version
+            if resp.protocol_version != self.config.PROTOCOL_VERSION:
+                msg = "Protocol version mismatch"
+                raise ValueError(msg)
 
-        # Verify cipher suite
-        if resp.cipher_suite != self.config.CIPHER_SUITE:
-            msg = "Cipher suite mismatch"
-            raise ValueError(msg)
+            # Verify cipher suite
+            if resp.cipher_suite != self.config.CIPHER_SUITE:
+                msg = "Cipher suite mismatch"
+                raise ValueError(msg)
 
-        # Verify required features
-        if resp.required_features != self.config.REQUIRED_FEATURES:
-            msg = "Required features mismatch"
-            raise ValueError(msg)
+            # Verify required features
+            if resp.required_features != self.config.REQUIRED_FEATURES:
+                msg = "Required features mismatch"
+                raise ValueError(msg)
 
-        # Verify signature
-        signature = bytes.fromhex(resp.signature)
-        resp_dict = resp.model_dump()
-        resp_dict.pop("signature")
-        self.server_pub.verify(
-            signature, json.dumps(resp_dict, sort_keys=True).encode()
-        )
+            # Verify signature
+            signature = bytes.fromhex(resp.signature)
+            resp_dict = resp.model_dump()
+            resp_dict.pop("signature")
+            self.server_pub.verify(
+                signature,
+                json.dumps(resp_dict, sort_keys=True, separators=(",", ":")).encode(),
+            )
 
-        server_eph_pub = bytes.fromhex(resp.server_eph_pub)
-        self.session_id = resp.session_id
-        self.initial_nonce_prefix = bytes.fromhex(resp.nonce_prefix)
+            server_eph_pub = bytes.fromhex(resp.server_eph_pub)
+            self.session_id = resp.session_id
+            self.initial_nonce_prefix = bytes.fromhex(resp.nonce_prefix)
 
-        shared = self.client_eph_priv.exchange(
-            X25519PublicKey.from_public_bytes(server_eph_pub)
-        )
+            shared = self.client_eph_priv.exchange(
+                X25519PublicKey.from_public_bytes(server_eph_pub)
+            )
 
-        # Derive root secret from shared
-        self.root_secret = HKDF(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=(self.license_data.payload.license_id + self.session_id).encode(),
-            info=b"root",
-        ).derive(shared)
+            # Derive root secret from shared
+            self.root_secret = HKDF(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=(self.license_data.payload.license_id + self.session_id).encode(),
+                info=b"root",
+            ).derive(shared)
 
-        # Calculate handshake transcript hash for channel binding
-        handshake_data = {
-            "license_id": self.license_data.payload.license_id,
-            "client_pubkey": self.client_pub_hex,
-            "client_eph_pub": self.client_eph_pub_hex,
-            "server_eph_pub": resp.server_eph_pub,
-            "nonce_prefix": resp.nonce_prefix,
-        }
-        self.transcript_hash = hashlib.sha256(
-            json.dumps(handshake_data, sort_keys=True).encode()
-        ).hexdigest()
+            # Calculate handshake transcript hash for channel binding
+            handshake_data = {
+                "license_id": self.license_data.payload.license_id,
+                "client_pubkey": self.client_pub_hex,
+                "client_eph_pub": self.client_eph_pub_hex,
+                "server_eph_pub": resp.server_eph_pub,
+                "nonce_prefix": resp.nonce_prefix,
+            }
+            self.transcript_hash = hashlib.sha256(
+                json.dumps(handshake_data, sort_keys=True).encode()
+            ).hexdigest()
 
-        effective_prefix = CryptoUtils.get_nonce_prefix_for_epoch(
-            self.initial_nonce_prefix, 0
-        )
-        self.session_key = CryptoUtils.derive_session_key(
-            self.root_secret,
-            self.license_data.payload.license_id,
-            self.session_id,
-            0,
-            effective_prefix.hex(),
-        )
-        self.aead = ChaCha20Poly1305(self.session_key)
+            effective_prefix = CryptoUtils.get_nonce_prefix_for_epoch(
+                self.initial_nonce_prefix, 0
+            )
+            self.session_key = CryptoUtils.derive_session_key(
+                self.root_secret,
+                self.license_data.payload.license_id,
+                self.session_id,
+                0,
+                effective_prefix.hex(),
+            )
+            self.aead = ChaCha20Poly1305(self.session_key)
 
-        logger.info("Secure session started: %s", self.session_id)
-        return self.session_id
+            logger.info("Secure session started: %s", self.session_id)
+            return self.session_id
+        except Exception as e:
+            print(f"Client error: {type(e).__name__}: {e}")
+            raise
 
     def is_license_active(self) -> bool:
         """Check if the license is currently active (session is valid)."""
@@ -236,6 +250,8 @@ class SessionHandlerInfra:
             if r.status_code == HTTP_OK:
                 success = True
                 break
+            else:
+                print(f"Server error on renew attempt {retry_count + 1}: {r.text}")
             retry_count += 1
             if retry_count < max_retries:
                 time.sleep(backoff)

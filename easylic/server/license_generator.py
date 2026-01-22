@@ -43,7 +43,7 @@ class LicenseGenerator(Configurable):
 
     def sign(self, obj: dict[str, Any]) -> str:
         """Sign a dictionary object."""
-        data = json.dumps(obj, sort_keys=True).encode()
+        data = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()
         return self.server_priv.sign(data).hex()
 
     def validate_policy(self, policy: dict[str, Any]) -> bool:

@@ -77,7 +77,7 @@ class Config:
         self.POLICY_VERSION: str = "1.0"
 
         # Logging
-        self.LOG_LEVEL: int = logging.INFO
+        self.LOG_LEVEL: int = logging.DEBUG
 
     def get_server_keys(self) -> tuple[Ed25519PublicKey, Ed25519PrivateKey]:
         """Load server keys from files."""

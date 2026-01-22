@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import time
 import uuid
@@ -45,6 +46,7 @@ class StartHandler:
         self.license_generator = license_generator
         self.max_start_attempts_per_minute = max_start_attempts_per_minute
         self.session_ttl = session_ttl
+        self.logger = logging.getLogger(__name__)
 
     def handle_start(self, req: StartRequest) -> dict[str, Any]:
         """Handle start request."""
