@@ -105,8 +105,16 @@ class ConfigLoader(Configurable):
         if not license_path.exists():
             msg = f"License file not found: {license_path}"
             raise FileNotFoundError(msg)
+        if license_path.stat().st_size == 0:
+            msg = f"License file is empty: {license_path}"
+            raise ValueError(msg)
         with license_path.open() as lic_f:
-            return LicenseData.model_validate_json(lic_f.read())
+            content = lic_f.read()
+        try:
+            return LicenseData.model_validate_json(content)
+        except Exception as e:
+            msg = f"Invalid license file format in {license_path}: {e}"
+            raise ValueError(msg) from e
 
     def generate_client_keys(
         self,
