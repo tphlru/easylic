@@ -42,6 +42,7 @@ easylic/server/domain/__init__.py
 easylic/server/domain/admin_handler.py
 easylic/server/domain/renew_handler.py
 easylic/server/domain/start_handler.py
+tests/__init__.py
 tests/test_cli.py
 tests/test_client.py
 tests/test_config.py
