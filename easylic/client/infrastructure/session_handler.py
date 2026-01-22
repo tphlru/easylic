@@ -13,14 +13,6 @@ from typing import TYPE_CHECKING
 
 import requests
 from cryptography.hazmat.primitives import hashes
-
-HTTP_OK = 200
-
-if TYPE_CHECKING:
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-        Ed25519PrivateKey,
-        Ed25519PublicKey,
-    )
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
@@ -40,10 +32,32 @@ from easylic.common.models import (
     StartResponse,
 )
 
+HTTP_OK = 200
+
+if TYPE_CHECKING:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PrivateKey,
+        Ed25519PublicKey,
+    )
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+from easylic.common.config import Config
+from easylic.common.crypto import CryptoUtils
+from easylic.common.models import (
+    LicenseData,
+    RenewData,
+    RenewRequest,
+    RenewResponse,
+    RenewResponseData,
+    StartRequest,
+    StartResponse,
+)
+
 logger = logging.getLogger(__name__)
 
 
-class SessionHandler:
+class SessionHandlerInfra:
     """Handles session start, renew, and management."""
 
     def __init__(
