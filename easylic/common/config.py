@@ -55,9 +55,9 @@ class Config:
         }
 
         # Server settings
-        self.ADMIN_PASSWORD: str | None = os.getenv("ADMIN_PASSWORD")
-        self.SERVER_HOST: str = os.getenv("SERVER_HOST", "127.0.0.1")
-        self.SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8000"))
+        self.ADMIN_PASSWORD: str | None = os.getenv("EASYLIC_ADMIN_PASSWORD")
+        self.SERVER_HOST: str = os.getenv("EASYLIC_SERVER_HOST", "127.0.0.1")
+        self.SERVER_PORT: int = int(os.getenv("EASYLIC_SERVER_PORT", "8000"))
         self.SERVER_URL: str = f"http://{self.SERVER_HOST}:{self.SERVER_PORT}"
 
         # File paths

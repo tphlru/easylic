@@ -44,13 +44,13 @@ def keygen(keys_dir: str | None) -> None:
 @click.option(
     "--host",
     default=None,
-    help="Host to bind server to (default: from SERVER_HOST env or 127.0.0.1)",
+    help="Host to bind server to (default: from EASYLIC_SERVER_HOST env or 127.0.0.1)",
 )
 @click.option(
     "--port",
     default=None,
     type=int,
-    help="Port to bind server to (default: from SERVER_PORT env or 8000)",
+    help="Port to bind server to (default: from EASYLIC_SERVER_PORT env or 8000)",
 )
 @click.option(
     "--reset-sessions",
@@ -68,14 +68,14 @@ def serve(
     if keys_dir:
         os.environ["EASYLIC_KEYS_DIR"] = keys_dir
     if host:
-        os.environ["SERVER_HOST"] = host
+        os.environ["EASYLIC_SERVER_HOST"] = host
     if port:
-        os.environ["SERVER_PORT"] = str(port)
+        os.environ["EASYLIC_SERVER_PORT"] = str(port)
 
     # Require ADMIN_PASSWORD
-    admin_password = os.getenv("ADMIN_PASSWORD")
+    admin_password = os.getenv("EASYLIC_ADMIN_PASSWORD")
     if not admin_password:
-        msg = "ERROR: ADMIN_PASSWORD env var must be set to a secure password."
+        msg = "ERROR: EASYLIC_ADMIN_PASSWORD env var must be set to a secure password."
         raise click.ClickException(msg)
 
     # Create config with updated env vars

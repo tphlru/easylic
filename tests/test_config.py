@@ -17,18 +17,18 @@ def test_config_class_attributes() -> None:
 def test_config_server_settings() -> None:
     # Test default values
     config = Config()
-    assert os.getenv("ADMIN_PASSWORD") == config.ADMIN_PASSWORD
-    assert os.getenv("SERVER_HOST", "127.0.0.1") == config.SERVER_HOST
-    assert int(os.getenv("SERVER_PORT", "8000")) == config.SERVER_PORT
+    assert os.getenv("EASYLIC_ADMIN_PASSWORD") == config.ADMIN_PASSWORD
+    assert os.getenv("EASYLIC_SERVER_HOST", "127.0.0.1") == config.SERVER_HOST
+    assert int(os.getenv("EASYLIC_SERVER_PORT", "8000")) == config.SERVER_PORT
 
 
 def test_config_paths(monkeypatch: Any) -> None:
     """Test config paths with clean environment."""
     # Ensure clean environment for this test
     monkeypatch.delenv("EASYLIC_KEYS_DIR", raising=False)
-    monkeypatch.delenv("SERVER_HOST", raising=False)
-    monkeypatch.delenv("SERVER_PORT", raising=False)
-    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    monkeypatch.delenv("EASYLIC_SERVER_HOST", raising=False)
+    monkeypatch.delenv("EASYLIC_SERVER_PORT", raising=False)
+    monkeypatch.delenv("EASYLIC_ADMIN_PASSWORD", raising=False)
 
     # Import Config after env cleanup to get fresh values
     from importlib import reload  # noqa: PLC0415
