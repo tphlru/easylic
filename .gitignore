@@ -147,6 +147,9 @@ easylic/server/server_public.key
 easylic/client/keys/
 license.json
 
+# Test data
+easylic/data/
+
 # Logs
 *.log
 logs/
