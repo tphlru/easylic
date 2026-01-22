@@ -103,20 +103,24 @@ class LicenseService:
         """Health check endpoint."""
         return {"status": "ok", "timestamp": int(time.time())}
 
-    async def start(self, req: StartRequest) -> dict:
+    async def start(self, license_request: StartRequest) -> dict:
         """Handle /start endpoint business logic."""
-        return self.start_handler.handle_start(req)
+        return self.start_handler.handle_start(license_request)
 
-    async def renew(self, req: RenewRequest) -> RenewResponse:
+    async def renew(self, license_request: RenewRequest) -> RenewResponse:
         """Handle /renew endpoint business logic."""
-        return self.renew_handler.handle_renew(req)
+        return self.renew_handler.handle_renew(license_request)
 
-    async def revoke(self, req: RevokeRequest, admin_password: str | None) -> dict:
+    async def revoke(
+        self, license_request: RevokeRequest, admin_password: str | None
+    ) -> dict:
         """Handle /revoke endpoint business logic."""
-        return await self.admin_handler.revoke(req, admin_password)
+        return await self.admin_handler.revoke(license_request, admin_password)
 
     async def generate_license_endpoint(
-        self, req: GenerateLicenseRequest, admin_password: str | None
+        self, license_request: GenerateLicenseRequest, admin_password: str | None
     ) -> Response:
         """Handle /generate_license endpoint business logic."""
-        return await self.admin_handler.generate_license_endpoint(req, admin_password)
+        return await self.admin_handler.generate_license_endpoint(
+            license_request, admin_password
+        )

@@ -1,8 +1,8 @@
-# EasyLic
+# EasyLic // TPHL Easy Licensing
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
-[![License](https://img.shields.io/badge/License-THPL-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-TPHL-orange.svg)](LICENSE)
 
 A secure, cryptographic license server built with FastAPI and modern cryptography libraries. EasyLic provides robust software licensing with session management, revocation, and comprehensive security features to protect against various attacks.
 
@@ -118,17 +118,15 @@ Or via API (requires admin password to be set via `ADMIN_PASSWORD` environment v
 curl -X POST http://localhost:8000/generate_license \
   -H "Content-Type: application/json" \
   -d '{
-    "payload": {
-      "password": "your_admin_password",
-      "license_id": "lic-001",
-      "product": "MyApp",
-      "valid_from": 1704067200,
-      "valid_until": 1735689600,
-      "policy": {
-        "version": "1.0",
-        "max_sessions": 1,
-        "features": ["feature1", "feature2"]
-      }
+    "password": "your_admin_password",
+    "license_id": "lic-001",
+    "product": "MyApp",
+    "valid_from": 1704067200,
+    "valid_until": 1735689600,
+    "policy": {
+      "version": "1.0",
+      "max_sessions": 1,
+      "features": ["feature1", "feature2"]
     }
   }'
 ```
@@ -412,6 +410,6 @@ uvicorn easylic.server.core:app --reload
 
 ## License
 
-THPL Easy Licensing - All rights reserved.
+TPHL Easy Licensing - All rights reserved.
 
 This software is proprietary and may only be used in accordance with the terms of the license agreement.

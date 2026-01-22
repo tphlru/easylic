@@ -1,1 +1,1 @@
-# THPL Easy Licensing
+# TPHL Easy Licensing

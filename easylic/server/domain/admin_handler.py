@@ -1,5 +1,5 @@
 """
-Admin request handler for license service.
+Admin license_requestuest handler for license service.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 class AdminHandler:
-    """Handles admin requests like revoke and generate license."""
+    """Handles admin license_requestuests like revoke and generate license."""
 
     def __init__(
         self,
@@ -38,9 +38,11 @@ class AdminHandler:
         self.session_manager = session_manager
         self.data_persistence = data_persistence
 
-    async def revoke(self, req: RevokeRequest, admin_password: str | None) -> dict:
+    async def revoke(
+        self, license_request: RevokeRequest, admin_password: str | None
+    ) -> dict:
         """Handle /revoke endpoint business logic."""
-        payload = req.payload
+        payload = license_request.payload
         if admin_password is None or payload.get("password") != admin_password:
             msg = "Invalid admin password"
             raise ValidationError(msg)
@@ -64,20 +66,19 @@ class AdminHandler:
         return {"revoked_at": now}
 
     async def generate_license_endpoint(
-        self, req: GenerateLicenseRequest, admin_password: str | None
+        self, license_request: GenerateLicenseRequest, admin_password: str | None
     ) -> Response:
         """Handle /generate_license endpoint business logic."""
-        payload = req.payload
-        if admin_password is None or payload.get("password") != admin_password:
+        if admin_password is None or license_request.password != admin_password:
             msg = "Invalid admin password"
             raise ValidationError(msg)
 
         try:
-            license_id = payload["license_id"]
-            product = payload["product"]
-            valid_from = payload["valid_from"]
-            valid_until = payload["valid_until"]
-            policy = payload["policy"]
+            license_id = license_request.license_id
+            product = license_request.product
+            valid_from = license_request.valid_from
+            valid_until = license_request.valid_until
+            policy = license_request.policy
             license_data = self.license_generator.generate_license(
                 license_id, product, valid_from, valid_until, policy
             )
@@ -97,5 +98,5 @@ class AdminHandler:
             msg = str(e)
             raise ValidationError(msg, 400) from e
         except KeyError as e:
-            msg = "Missing required fields"
+            msg = "Missing license_requestuired fields"
             raise ValidationError(msg, 400) from e

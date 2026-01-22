@@ -92,23 +92,22 @@
             const password = document.getElementById('genPassword').value;
 
             try {
+                const req = {
+                    license_id: licenseId,
+                    product: product,
+                    valid_from: validFrom,
+                    valid_until: validUntil,
+                    policy: {
+                        version: "1.0",
+                        max_sessions: maxSessions,
+                        features: features
+                    },
+                    password: password
+                };
                 const response = await fetch('/generate_license', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        payload: {
-                            license_id: licenseId,
-                            product: product,
-                            valid_from: validFrom,
-                            valid_until: validUntil,
-                            policy: {
-                                version: "1.0",
-                                max_sessions: maxSessions,
-                                features: features
-                            },
-                            password: password
-                        }
-                    })
+                    body: JSON.stringify(req)
                 });
                 if (response.ok) {
                     const blob = await response.blob();

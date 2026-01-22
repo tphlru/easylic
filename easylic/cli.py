@@ -1,5 +1,5 @@
 """
-Command-line interface for THPL Easy Licensing.
+Command-line interface for TPHL Easy Licensing.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from easylic.server.license_generator import LicenseGenerator
 
 @click.group()
 def cli() -> None:
-    """THPL Easy Licensing CLI"""
+    """TPHL Easy Licensing CLI"""
 
 
 @cli.command()

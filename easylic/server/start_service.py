@@ -61,18 +61,18 @@ class StartService:
         self.max_ciphertext_len = max_ciphertext_len
         self.logger = logger
 
-    async def start(self, req: StartRequest) -> dict:
+    async def start(self, license_request: StartRequest) -> dict:
         """Handle /start endpoint business logic."""
-        self._validate_start_request(req)
+        self._validate_start_license_requestuest(license_request)
         self.session_manager.clean_expired_sessions()
 
-        lic, client_pub_hex, client_eph_pub = self._extract_start_data(req)
+        lic, client_pub_hex, client_eph_pub = self._extract_start_data(license_request)
         license_id = self._perform_anti_replay_and_verify(lic, client_eph_pub)
         policy = self._validate_license_and_policy(lic)
         self._enforce_session_limits(license_id, policy)
 
         session_data, resp_data = self._generate_keys_and_session(
-            req, lic, client_pub_hex, client_eph_pub
+            license_request, lic, client_pub_hex, client_eph_pub
         )
         self.session_manager.add_session(
             session_data["session_id"], session_data["session"]
@@ -80,24 +80,26 @@ class StartService:
 
         return self._build_start_response(session_data, resp_data)
 
-    def _validate_start_request(self, req: StartRequest) -> None:
-        """Validate protocol version and required features."""
-        if req.version != self.config.PROTOCOL_VERSION:
+    def _validate_start_license_requestuest(
+        self, license_request: StartRequest
+    ) -> None:
+        """Validate protocol version and license_requestuired features."""
+        if license_request.version != self.config.PROTOCOL_VERSION:
             msg = "protocol version mismatch"
             raise ValidationError(msg)
-        for feature, required in self.config.REQUIRED_FEATURES.items():
-            if req.supported_features.get(feature) != required:
-                msg = f"required feature not supported: {feature}"
+        for feature, license_requestuired in self.config.REQUIRED_FEATURES.items():
+            if license_request.supported_features.get(feature) != license_requestuired:
+                msg = f"license_requestuired feature not supported: {feature}"
                 raise ValidationError(msg)
 
     def _extract_start_data(
-        self, req: StartRequest
+        self, license_request: StartRequest
     ) -> tuple[LicenseData, str, X25519PublicKey]:
-        """Extract license, client pub key, and ephemeral pub key from request."""
-        lic = req.license
-        client_pub_hex = req.client_pubkey
+        """Extract license, client pubkey, and ephemeral pubkey from request."""
+        lic = license_request.license
+        client_pub_hex = license_request.client_pubkey
         client_eph_pub = X25519PublicKey.from_public_bytes(
-            bytes.fromhex(req.client_eph_pub)
+            bytes.fromhex(license_request.client_eph_pub)
         )
         return lic, client_pub_hex, client_eph_pub
 
@@ -144,7 +146,7 @@ class StartService:
 
     def _generate_keys_and_session(
         self,
-        req: StartRequest,
+        license_request: StartRequest,
         lic: LicenseData,
         client_pub_hex: str,
         client_eph_pub: X25519PublicKey,
@@ -172,8 +174,8 @@ class StartService:
         expires = int(time.time()) + self.session_ttl
         handshake_data = {
             "license_id": lic.payload.license_id,
-            "client_pubkey": req.client_pubkey,
-            "client_eph_pub": req.client_eph_pub,
+            "client_pubkey": license_request.client_pubkey,
+            "client_eph_pub": license_request.client_eph_pub,
             "server_eph_pub": server_eph_pub.public_bytes(
                 serialization.Encoding.Raw,
                 serialization.PublicFormat.Raw,
@@ -228,7 +230,7 @@ class StartService:
             "expires_at": session_data["expires"],
             "protocol_version": self.config.PROTOCOL_VERSION,
             "cipher_suite": self.config.CIPHER_SUITE,
-            "required_features": self.config.REQUIRED_FEATURES,
+            "license_requestuired_features": self.config.REQUIRED_FEATURES,
             "server_eph_pub": server_eph_pub.public_bytes(
                 serialization.Encoding.Raw,
                 serialization.PublicFormat.Raw,

@@ -5,8 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "easylic"
 version = "0.0.0"
-description = "THPL Easy Licensing"
-authors = [{name = "THPL"}]
+description = "TPHL Easy Licensing"
+authors = [{name = "TPHL"}]
 dependencies = [
     "click",
     "fastapi",

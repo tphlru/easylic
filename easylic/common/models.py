@@ -83,7 +83,12 @@ class RevokeRequest(BaseModel):
 
 
 class GenerateLicenseRequest(BaseModel):
-    payload: dict[str, Any]
+    license_id: str
+    product: str
+    valid_from: int
+    valid_until: int
+    policy: dict[str, Any]
+    password: str
 
 
 class Policy(BaseModel):

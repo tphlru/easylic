@@ -4,22 +4,19 @@ Routes for the license server.
 
 from __future__ import annotations
 
-from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from fastapi import FastAPI  # noqa: TC002
 from fastapi.responses import HTMLResponse
 
-if TYPE_CHECKING:
-    from fastapi import FastAPI
-
-    from easylic.common.models import (
-        GenerateLicenseRequest,
-        RenewRequest,
-        RevokeRequest,
-        StartRequest,
-    )
-    from easylic.server.services import LicenseService
+from easylic.common.models import (  # noqa: TC001
+    GenerateLicenseRequest,
+    RenewRequest,
+    RevokeRequest,
+    StartRequest,
+)
+from easylic.server.services import LicenseService  # noqa: TC001
 
 
 class LicenseRoutes:
@@ -29,6 +26,14 @@ class LicenseRoutes:
         self.service = service
         self.admin_password = admin_password
 
+    async def _revoke_handler(self, license_request: RevokeRequest) -> dict:
+        return await self.revoke(license_request)
+
+    async def _generate_license_handler(
+        self, license_request: GenerateLicenseRequest
+    ) -> Any:
+        return await self.generate_license_endpoint(license_request)
+
     def setup_routes(self, app: FastAPI) -> None:
         """Setup API routes on the FastAPI app."""
 
@@ -36,37 +41,33 @@ class LicenseRoutes:
         app.post("/start")(self.start)
         app.post("/renew")(self.renew)
         if self.admin_password:
-            app.post("/revoke")(
-                partial(self.revoke, admin_password=self.admin_password)
-            )
-            app.post("/generate_license")(
-                partial(
-                    self.generate_license_endpoint, admin_password=self.admin_password
-                )
-            )
+            app.post("/revoke")(self._revoke_handler)
+            app.post("/generate_license")(self._generate_license_handler)
         app.get("/admin")(self.admin_page)
 
     async def health(self) -> dict[str, Any]:
         """Handle /health endpoint."""
         return self.service.health()
 
-    async def start(self, req: StartRequest) -> dict:
+    async def start(self, license_request: StartRequest) -> dict:
         """Handle /start endpoint."""
-        return await self.service.start(req)
+        return await self.service.start(license_request)
 
-    async def renew(self, req: RenewRequest) -> Any:
+    async def renew(self, license_request: RenewRequest) -> Any:
         """Handle /renew endpoint."""
-        return await self.service.renew(req)
+        return await self.service.renew(license_request)
 
-    async def revoke(self, req: RevokeRequest, admin_password: str | None) -> dict:
+    async def revoke(self, license_request: RevokeRequest) -> dict:
         """Handle /revoke endpoint."""
-        return await self.service.revoke(req, admin_password)
+        return await self.service.revoke(license_request, self.admin_password)
 
     async def generate_license_endpoint(
-        self, req: GenerateLicenseRequest, admin_password: str | None
+        self, license_request: GenerateLicenseRequest
     ) -> Any:
         """Handle /generate_license endpoint."""
-        return await self.service.generate_license_endpoint(req, admin_password)
+        return await self.service.generate_license_endpoint(
+            license_request, self.admin_password
+        )
 
     async def admin_page(self) -> HTMLResponse:
         """Handle /admin endpoint."""
