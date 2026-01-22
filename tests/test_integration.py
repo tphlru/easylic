@@ -65,7 +65,9 @@ def temp_setup(tmp_path):
     }
 
     # Sign the license properly
-    payload_str = json.dumps(license_data["payload"], separators=(",", ":"))
+    payload_str = json.dumps(
+        license_data["payload"], sort_keys=True, separators=(",", ":")
+    )
     signature = private_key.sign(payload_str.encode())
     license_data["signature"] = signature.hex()
 
