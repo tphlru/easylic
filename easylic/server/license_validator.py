@@ -37,7 +37,9 @@ class LicenseValidator:
         """Verify license signature and validity."""
         payload = lic.payload
         sig = bytes.fromhex(lic.signature)
-        data = json.dumps(payload.model_dump(), sort_keys=True).encode()
+        data = json.dumps(
+            payload.model_dump(), sort_keys=True, separators=(",", ":")
+        ).encode()
         try:
             self.server_pub.verify(sig, data)
         except InvalidSignature:
