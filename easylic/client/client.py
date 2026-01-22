@@ -12,48 +12,17 @@ from easylic.client.application.session_manager import SessionManager
 from easylic.client.domain.entities import ClientKeys, License
 from easylic.client.infrastructure.config_loader import ConfigLoader
 from easylic.client.infrastructure.session_handler import SessionHandlerInfra
+from easylic.common.models import ClientConfig
 
 
 class LicenseClient:
     """License client for secure session management - Presentation layer."""
 
-    def __init__(
-        self,
-        server_url: str | None = None,
-        license_file: str | None = None,
-        log_level: int | None = None,
-        on_error_callback: Callable[[Exception], None] | None = None,
-        renew_interval: int | None = None,
-        session_ttl: int | None = None,
-        max_counter: int | None = None,
-        max_start_attempts_per_minute: int | None = None,
-        max_ciphertext_len: int | None = None,
-        max_used_eph_pubs_per_license: int | None = None,
-        server_host: str | None = None,
-        server_port: int | None = None,
-        base_dir: Path | None = None,
-        server_keys_dir: Path | None = None,
-        license_file_path: Path | None = None,
-        revoked_licenses_file_path: Path | None = None,
-    ):
+    def __init__(self, config: ClientConfig | None = None, **overrides):
+        if config is None:
+            config = ClientConfig(**overrides)
         # Infrastructure layer: Configuration and file loading
-        self.config_loader = ConfigLoader(
-            server_url=server_url,
-            license_file=license_file,
-            log_level=log_level,
-            renew_interval=renew_interval,
-            session_ttl=session_ttl,
-            max_counter=max_counter,
-            max_start_attempts_per_minute=max_start_attempts_per_minute,
-            max_ciphertext_len=max_ciphertext_len,
-            max_used_eph_pubs_per_license=max_used_eph_pubs_per_license,
-            server_host=server_host,
-            server_port=server_port,
-            base_dir=base_dir,
-            server_keys_dir=server_keys_dir,
-            license_file_path=license_file_path,
-            revoked_licenses_file_path=revoked_licenses_file_path,
-        )
+        self.config_loader = ConfigLoader(config)
 
         # Load infrastructure components
         server_pub = self.config_loader.load_server_public_key()
@@ -97,7 +66,7 @@ class LicenseClient:
         self.runner = Runner(
             session_manager=self.session_manager,
             renew_interval=self.config_loader.renew_interval,
-            on_error_callback=on_error_callback,
+            on_error_callback=config.on_error_callback,
         )
 
     @property

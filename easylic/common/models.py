@@ -4,7 +4,8 @@ Pydantic models for request/response validation.
 
 from __future__ import annotations
 
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable
 
 from pydantic import BaseModel, Field
 
@@ -98,3 +99,22 @@ class SessionData(BaseModel):
     rekey_epoch: int
     last_renew_at: int
     last_cipher_hash: bytes | None = None
+
+
+class ClientConfig(BaseModel):
+    server_url: str | None = None
+    license_file: str | None = None
+    log_level: int | None = None
+    on_error_callback: Callable[[Exception], None] | None = None
+    renew_interval: int | None = None
+    session_ttl: int | None = None
+    max_counter: int | None = None
+    max_start_attempts_per_minute: int | None = None
+    max_ciphertext_len: int | None = None
+    max_used_eph_pubs_per_license: int | None = None
+    server_host: str | None = None
+    server_port: int | None = None
+    base_dir: Path | None = None
+    server_keys_dir: Path | None = None
+    license_file_path: Path | None = None
+    revoked_licenses_file_path: Path | None = None

@@ -28,10 +28,6 @@ from .domain.admin_handler import AdminHandler
 from .domain.renew_handler import RenewHandler
 from .domain.start_handler import StartHandler
 
-from .domain.admin_handler import AdminHandler
-from .domain.renew_handler import RenewHandler
-from .domain.start_handler import StartHandler
-
 
 class LicenseService:
     """Handles business logic for the license server."""
