@@ -127,7 +127,3 @@ class LicenseServer:
     def _get_server_keys(self) -> tuple[Ed25519PublicKey, Ed25519PrivateKey]:
         """Load server keys from files using configured paths."""
         return self.config.get_server_keys()
-
-
-server = LicenseServer()
-app = server.app

@@ -59,14 +59,3 @@ class KeyGenerator:
         logger.info("  Private: %s", private_path)
         logger.info("  Public: %s", public_path)
         logger.info("Keep the private key secure!")
-
-
-def main() -> None:
-    """Generate and save server public/private keys."""
-    keys_dir = os.getenv("EASYLIC_KEYS_DIR")
-    keygen = KeyGenerator(keys_dir=Path(keys_dir) if keys_dir else None)
-    keygen.generate_keys()
-
-
-if __name__ == "__main__":
-    main()

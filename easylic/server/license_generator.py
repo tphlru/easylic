@@ -122,13 +122,3 @@ class LicenseGenerator:
             self.logger.info("Generated License:")
             self.logger.info(json.dumps(license_data.model_dump(), indent=2))
             return license_data
-
-
-def main() -> None:
-    # Example: set log level via argument or default
-    generator = LicenseGenerator(log_level=logging.INFO)
-    generator.interactive_generate()
-
-
-if __name__ == "__main__":
-    main()

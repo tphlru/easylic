@@ -10,9 +10,9 @@ import click
 
 from easylic.common.config import Config
 
-from .server import main as server_main
-from .server.keygen import main as keygen_main
-from .server.license_generator import main as generator_main
+from .server import start_server
+from .server.keygen import KeyGenerator
+from .server.license_generator import LicenseGenerator
 
 
 @click.group()
@@ -31,7 +31,8 @@ def keygen(keys_dir: str | None) -> None:
     if keys_dir:
         os.environ["EASYLIC_KEYS_DIR"] = keys_dir
 
-    keygen_main()
+    keygen = KeyGenerator()
+    keygen.generate_keys()
     click.echo("Keys generated and saved")
 
 
@@ -71,7 +72,7 @@ def serve(keys_dir: str | None, host: str | None, port: int | None) -> None:
     # Create config with updated env vars
     config = Config()
 
-    server_main(config)
+    start_server(config)
 
 
 @cli.command()
@@ -85,7 +86,8 @@ def generator(keys_dir: str | None) -> None:
     if keys_dir:
         os.environ["EASYLIC_KEYS_DIR"] = keys_dir
 
-    generator_main()
+    generator = LicenseGenerator()
+    generator.interactive_generate()
 
 
 if __name__ == "__main__":

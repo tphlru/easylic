@@ -225,18 +225,3 @@ class LicenseClient:
     def stop_thread(self) -> None:
         """Stop the background thread (not implemented, use daemon thread)."""
         # Since it's daemon, it will stop when main thread exits
-
-
-def main() -> None:
-    # Example: run in thread with callback
-    client = LicenseClient(log_level=logging.INFO, on_error_callback=error_handler)
-    client.start_in_thread()
-
-    # Main thread can do other work
-    while True:
-        logger.info("License active: %s", client.is_license_active())
-        time.sleep(5)
-
-
-if __name__ == "__main__":
-    main()
