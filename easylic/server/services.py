@@ -26,7 +26,7 @@ if TYPE_CHECKING:
         RevokeRequest,
         StartRequest,
     )
-    from easylic.server.domain.admin_handler import AdminHandler  # noqa: TC004
+from easylic.server.domain.admin_handler import AdminHandler
 from easylic.server.domain.renew_handler import RenewHandler
 from easylic.server.domain.start_handler import StartHandler
 from easylic.server.persistence import DataPersistence

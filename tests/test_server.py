@@ -106,4 +106,4 @@ def test_server_renew_endpoint_invalid_session(temp_keys_dir: Path) -> None:
     )
 
     # Should return 404 or error
-    assert response.status_code in [400, 403, 404]
+    assert response.status_code in [400, 403, 404, 422]

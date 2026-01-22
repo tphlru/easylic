@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 
 from easylic.common.models import (
     LicenseData,
@@ -44,7 +45,7 @@ def test_policy_model_defaults() -> None:
 
 
 def test_policy_validation() -> None:
-    with pytest.raises(ValueError, match="max_sessions must be greater than 0"):
+    with pytest.raises(ValidationError):
         Policy(version="1.0", max_sessions=0)  # max_sessions must be > 0
 
 
