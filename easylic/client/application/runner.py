@@ -1,5 +1,4 @@
-"""
-Application layer: Client runner for managing the license client lifecycle.
+"""Application layer: Client runner for managing the license client lifecycle.
 """
 
 from __future__ import annotations
@@ -7,9 +6,11 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from easylic.client.application.session_manager import SessionManager
 
 

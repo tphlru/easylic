@@ -1,5 +1,4 @@
-"""
-Infrastructure layer: Configuration loading and file operations.
+"""Infrastructure layer: Configuration loading and file operations.
 """
 
 from __future__ import annotations

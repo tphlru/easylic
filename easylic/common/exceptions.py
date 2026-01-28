@@ -1,5 +1,4 @@
-"""
-Custom exceptions for the license system.
+"""Custom exceptions for the license system.
 """
 
 from __future__ import annotations

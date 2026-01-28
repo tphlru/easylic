@@ -1,5 +1,4 @@
-"""
-OOP-based license client - Presentation layer.
+"""OOP-based license client - Presentation layer.
 """
 
 from __future__ import annotations

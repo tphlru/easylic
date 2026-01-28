@@ -1,5 +1,4 @@
-"""
-Routes for the license server.
+"""Routes for the license server.
 """
 
 from __future__ import annotations
@@ -36,7 +35,6 @@ class LicenseRoutes:
 
     def setup_routes(self, app: FastAPI) -> None:
         """Setup API routes on the FastAPI app."""
-
         app.get("/health")(self.health)
         app.post("/start")(self.start)
         app.post("/renew")(self.renew)

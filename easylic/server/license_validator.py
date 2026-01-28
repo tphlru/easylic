@@ -1,5 +1,4 @@
-"""
-License validation utilities.
+"""License validation utilities.
 """
 
 from __future__ import annotations

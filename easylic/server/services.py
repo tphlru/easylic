@@ -1,5 +1,4 @@
-"""
-Business logic services for the license server.
+"""Business logic services for the license server.
 """
 
 from __future__ import annotations

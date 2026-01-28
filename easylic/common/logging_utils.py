@@ -1,13 +1,11 @@
-"""
-Logging utilities for consistent logging setup across the application.
+"""Logging utilities for consistent logging setup across the application.
 """
 
 import logging
 
 
 def setup_logger(logger: logging.Logger, log_level: int) -> None:
-    """
-    Set up a logger with a StreamHandler and standard formatter.
+    """Set up a logger with a StreamHandler and standard formatter.
 
     Args:
         logger: The logger instance to configure

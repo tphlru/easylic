@@ -1,5 +1,4 @@
-"""
-Session management for license server.
+"""Session management for license server.
 """
 
 from __future__ import annotations

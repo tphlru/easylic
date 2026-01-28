@@ -1,5 +1,4 @@
-"""
-Start service for license server.
+"""Start service for license server.
 """
 
 from __future__ import annotations

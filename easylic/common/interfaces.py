@@ -1,5 +1,4 @@
-"""
-Interfaces and protocols for dependency injection.
+"""Interfaces and protocols for dependency injection.
 """
 
 from __future__ import annotations

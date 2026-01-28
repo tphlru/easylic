@@ -1,5 +1,4 @@
-"""
-Common cryptographic utilities.
+"""Common cryptographic utilities.
 """
 
 from cryptography.hazmat.primitives import hashes
@@ -13,7 +12,9 @@ class CryptoUtils:
     def get_nonce_prefix_for_epoch(initial_nonce_prefix: bytes, epoch: int) -> bytes:
         """Calculate nonce prefix for a given epoch."""
         epoch_bytes = epoch.to_bytes(4, "big")
-        return bytes(a ^ b for a, b in zip(initial_nonce_prefix, epoch_bytes))
+        return bytes(
+            a ^ b for a, b in zip(initial_nonce_prefix, epoch_bytes, strict=False)
+        )
 
     @staticmethod
     def derive_session_key(

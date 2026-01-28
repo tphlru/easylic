@@ -1,5 +1,4 @@
-"""
-Domain layer: Core business entities and rules.
+"""Domain layer: Core business entities and rules.
 """
 
 from __future__ import annotations

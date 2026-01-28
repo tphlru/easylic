@@ -36,6 +36,7 @@ EasyLic provides everything you need for secure software licensing:
 - **Multi-Device Control**: Set limits on concurrent usage to prevent license sharing.
 - **Admin Dashboard**: Web interface for creating, managing, and revoking licenses.
 - **Easy Integration**: Python client library with auto-renewal for seamless app integration.
+- **Decorator-Based Protection**: Simple decorators to protect functions and methods (`@requires_active_license`, `@license_protected`, `@license_retry_on_fail`).
 - **Docker Ready**: Simple containerized deployment.
 - **Cryptographic Protection**: Advanced security with digital signatures and encryption (see [Concepts and Security Overview](#concepts-and-security-overview) for details).
 
@@ -98,6 +99,44 @@ while client.is_license_active():
     # App runs while license is active
     pass
 ```
+
+### Using Decorators (Simplest Way)
+
+The easiest way to protect your functions is using decorators:
+
+```python
+from easylic import LicenseClient, requires_active_license
+
+client = LicenseClient()
+
+# Protect a function - raises ValidationError if license is inactive
+@requires_active_license(client, "Premium feature requires active license")
+def premium_feature():
+    return "Premium feature executed!"
+
+# Graceful handling - returns None if license is inactive
+@requires_active_license(client, "Optional feature unavailable", raise_exception=False)
+def optional_feature():
+    return "Optional feature executed!"
+
+# Class method protection
+class MyService:
+    def __init__(self):
+        self.client = LicenseClient()
+    
+    @requires_active_license("client", "Service requires license")
+    def protected_method(self):
+        return "Protected method executed"
+
+# Retry logic for critical operations
+from easylic import license_retry_on_fail
+
+@license_retry_on_fail(client, max_retries=3)
+def critical_operation():
+    return "Critical operation completed"
+```
+
+See [docs/decorators.md](docs/decorators.md) for full documentation.
 
 ### Generate a License (Admin)
 

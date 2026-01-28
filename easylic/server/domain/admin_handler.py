@@ -1,5 +1,4 @@
-"""
-Admin license_requestuest handler for license service.
+"""Admin license_requestuest handler for license service.
 """
 
 from __future__ import annotations

@@ -1,5 +1,4 @@
-"""
-OOP-based key generator for server Ed25519 keys.
+"""OOP-based key generator for server Ed25519 keys.
 """
 
 from __future__ import annotations

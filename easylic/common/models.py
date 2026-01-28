@@ -1,11 +1,13 @@
-"""
-Pydantic models for request/response validation.
+"""Pydantic models for request/response validation.
 """
 
 from __future__ import annotations
 
 from pathlib import Path  # noqa: TC003
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from pydantic import BaseModel, Field
 

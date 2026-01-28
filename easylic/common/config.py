@@ -1,5 +1,4 @@
-"""
-Configuration settings for the license management system.
+"""Configuration settings for the license management system.
 """
 
 from __future__ import annotations

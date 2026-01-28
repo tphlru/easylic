@@ -1,5 +1,4 @@
-"""
-Application layer: Session management use cases.
+"""Application layer: Session management use cases.
 """
 
 from __future__ import annotations
@@ -70,4 +69,6 @@ class SessionManager:
     def get_nonce_prefix_for_epoch(initial_nonce_prefix: bytes, epoch: int) -> bytes:
         """Calculate nonce prefix for a given epoch."""
         epoch_bytes = epoch.to_bytes(4, "big")
-        return bytes(a ^ b for a, b in zip(initial_nonce_prefix, epoch_bytes))
+        return bytes(
+            a ^ b for a, b in zip(initial_nonce_prefix, epoch_bytes, strict=False)
+        )

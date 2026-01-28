@@ -1,5 +1,4 @@
-"""
-Command-line interface for TPHL Easy Licensing.
+"""Command-line interface for TPHL Easy Licensing.
 """
 
 from __future__ import annotations
@@ -61,7 +60,7 @@ def serve(
     keys_dir: str | None,
     host: str | None,
     port: int | None,
-    reset_sessions: bool,  # noqa: FBT001
+    reset_sessions: bool,
 ) -> None:
     """Start the license server"""
     # Set environment variables before importing server

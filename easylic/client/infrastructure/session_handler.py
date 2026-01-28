@@ -1,5 +1,4 @@
-"""
-Session handling for license client.
+"""Session handling for license client.
 """
 
 from __future__ import annotations

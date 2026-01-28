@@ -1,5 +1,4 @@
-"""
-Entry point for the license server.
+"""Entry point for the license server.
 """
 
 from __future__ import annotations

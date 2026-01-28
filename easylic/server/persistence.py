@@ -1,5 +1,4 @@
-"""
-Data persistence utilities.
+"""Data persistence utilities.
 """
 
 from __future__ import annotations

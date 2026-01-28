@@ -1,5 +1,4 @@
-"""
-Mixins for common functionality.
+"""Mixins for common functionality.
 """
 
 from __future__ import annotations
@@ -8,8 +7,7 @@ from typing import Any
 
 
 class Configurable:
-    """
-    Mixin class for handling configuration overrides.
+    """Mixin class for handling configuration overrides.
 
     Classes using this mixin should define a config attribute and can use
     apply_overrides to set attributes from override dict using config defaults.
@@ -21,8 +19,7 @@ class Configurable:
         config_obj: Any,
         attr_list: list[str] | None = None,
     ) -> None:
-        """
-        Apply overrides to the instance using the config object as defaults.
+        """Apply overrides to the instance using the config object as defaults.
 
         Sets self.attr = overrides.get(attr, config_obj.ATTR) for each attr in
         attr_list.

@@ -1,5 +1,4 @@
-"""
-OOP-based license server using FastAPI.
+"""OOP-based license server using FastAPI.
 """
 
 from __future__ import annotations

@@ -1,5 +1,4 @@
-"""
-Start request handler for license service.
+"""Start request handler for license service.
 """
 
 from __future__ import annotations

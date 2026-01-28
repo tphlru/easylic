@@ -1,5 +1,4 @@
-"""
-Renew request handler for license service.
+"""Renew request handler for license service.
 """
 
 from __future__ import annotations
@@ -190,7 +189,7 @@ class RenewHandler:
         self,
         sess: SessionData,
         data: RenewData,
-        is_retry: bool,  # noqa: FBT001
+        is_retry: bool,
         ciphertext: str,
     ) -> None:
         """Process counter increment, rekeying, and session updates."""
@@ -217,7 +216,7 @@ class RenewHandler:
         self,
         sess: SessionData,
         data: RenewData,
-        is_retry: bool,  # noqa: FBT001
+        is_retry: bool,
     ) -> RenewResponse:
         """Build the encrypted response for renew."""
         resp_plain = RenewResponseData(

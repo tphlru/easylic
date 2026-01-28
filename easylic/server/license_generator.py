@@ -1,5 +1,4 @@
-"""
-OOP-based license generator.
+"""OOP-based license generator.
 """
 
 from __future__ import annotations
